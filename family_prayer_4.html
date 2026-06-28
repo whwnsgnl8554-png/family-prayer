@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 가족의 기도 — 이미 이루어졌습니다</title>
+<style>
+/* ── 토큰 ─────────────────────────────────── */
+:root {
+  --navy:        #1a1f3a;
+  --gold:        #e0bc5a;   /* 더 밝은 골드 */
+  --gold2:       #f0d47a;   /* 더 밝은 골드2 */
+  --white:       #ffffff;
+  --text-light:  rgba(255,255,255,0.95);  /* 거의 흰색 */
+  --text-dim:    rgba(255,255,255,0.70);  /* 0.42 → 0.70 */
+  --card-bg:     rgba(255,255,255,0.09);  /* 카드 배경 약간 밝게 */
+  --card-border: rgba(224,188,90,0.40);   /* 테두리 더 선명하게 */
+  --radius:      18px;
+}
+
+/* ── 리셋 & 베이스 ───────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--navy);
+  color: var(--text-light);
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕',
+               'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── 별빛 캔버스 ─────────────────────────── */
+#stars-canvas {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+
+/* ── 배경 그라데이션 ─────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139,34,82,0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(26,31,58,0.8) 0%, transparent 60%);
+  z-index: 0; pointer-events: none;
+}
+
+/* ── 전체 컨테이너 ───────────────────────── */
+.page-wrap {
+  position: relative; z-index: 1;
+  max-width: 860px; margin: 0 auto;
+  padding: 0 18px 90px;
+}
+
+/* ── 음악 플레이어 바 ────────────────────── */
+.music-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(20, 24, 50, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(201,168,76,0.22);
+  padding: 10px 20px 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.music-toggle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201,168,76,0.6);
+  background: rgba(201,168,76,0.12);
+  color: var(--gold2);
+  font-size: 1.05rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.22s ease;
+  flex-shrink: 0;
+}
+.music-toggle:hover {
+  background: rgba(201,168,76,0.25);
+  box-shadow: 0 0 12px rgba(201,168,76,0.3);
+}
+.music-toggle.playing {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.2);
+  box-shadow: 0 0 14px rgba(201,168,76,0.35);
+}
+
+.music-info {
+  flex: 1;
+  min-width: 0;
+}
+.music-title {
+  font-size: 0.75rem;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.music-sub {
+  font-size: 0.67rem;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+/* 음파 애니메이션 */
+.music-wave {
+  display: flex; align-items: center; gap: 3px;
+  height: 20px;
+}
+.music-wave span {
+  display: block;
+  width: 3px;
+  background: var(--gold);
+  border-radius: 2px;
+  opacity: 0.7;
+}
+.music-wave span:nth-child(1) { height: 6px; }
+.music-wave span:nth-child(2) { height: 14px; }
+.music-wave span:nth-child(3) { height: 10px; }
+.music-wave span:nth-child(4) { height: 18px; }
+.music-wave span:nth-child(5) { height: 8px; }
+
+@keyframes wave1 { 0%,100%{height:6px}  50%{height:16px} }
+@keyframes wave2 { 0%,100%{height:14px} 50%{height:5px}  }
+@keyframes wave3 { 0%,100%{height:10px} 50%{height:20px} }
+@keyframes wave4 { 0%,100%{height:18px} 50%{height:7px}  }
+@keyframes wave5 { 0%,100%{height:8px}   50%{height:14px} }
+
+.music-wave.playing span:nth-child(1) { animation: wave1 1.1s ease-in-out infinite; }
+.music-wave.playing span:nth-child(2) { animation: wave2 0.9s ease-in-out infinite; }
+.music-wave.playing span:nth-child(3) { animation: wave3 1.3s ease-in-out infinite; }
+.music-wave.playing span:nth-child(4) { animation: wave4 0.8s ease-in-out infinite; }
+.music-wave.playing span:nth-child(5) { animation: wave5 1.0s ease-in-out infinite; }
+
+/* 볼륨 슬라이더 */
+.vol-wrap {
+  display: flex; align-items: center; gap: 7px;
+  flex-shrink: 0;
+}
+.vol-icon { font-size: 0.85rem; color: var(--text-dim); }
+input[type=range].vol-slider {
+  -webkit-appearance: none;
+  width: 70px; height: 3px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px; outline: none; cursor: pointer;
+}
+input[type=range].vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 6px rgba(201,168,76,0.5);
+}
+
+/* 첫 접속 오버레이 (브라우저 정책: 첫 클릭 후 자동재생) */
+.intro-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(15,18,40,0.96);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 20px;
+  text-align: center;
+  padding: 30px;
+  transition: opacity 0.7s ease;
+}
+.intro-overlay.hidden {
+  opacity: 0; pointer-events: none;
+}
+
+.intro-cross {
+  font-size: 2.2rem;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.intro-title {
+  font-size: clamp(1.3rem, 5vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--white);
+  line-height: 1.4;
+}
+.intro-sub {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.80);
+  letter-spacing: 0.12em;
+  line-height: 1.7;
+}
+.intro-btn {
+  margin-top: 8px;
+  padding: 16px 48px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #b8902a, #c9a84c, #e8c96a);
+  border: none;
+  color: #1a1530;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  box-shadow: 0 6px 28px rgba(201,168,76,0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+}
+.intro-btn:hover { transform: scale(1.04); box-shadow: 0 10px 36px rgba(201,168,76,0.6); }
+
+/* ── 헤더 ────────────────────────────────── */
+header { text-align: center; padding: 50px 0 34px; }
+
+.cross-icon {
+  display: inline-block; font-size: 1.6rem;
+  color: var(--gold); letter-spacing: 0.12em;
+  margin-bottom: 14px; opacity: 0.9;
+}
+
+.site-title {
+  font-size: clamp(1.5rem, 4.5vw, 2.4rem);
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.site-subtitle {
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 1;
+}
+
+/* ── 날짜 배너 ───────────────────────────── */
+.date-banner {
+  background: linear-gradient(135deg, rgba(201,168,76,0.13) 0%, rgba(139,34,82,0.10) 100%);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 22px 26px; margin-bottom: 26px;
+  display: flex; flex-direction: column; gap: 8px;
+  position: relative; overflow: hidden;
+}
+.date-banner::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.today-date {
+  font-size: clamp(0.88rem, 2.4vw, 1.0rem);
+  font-weight: 400; color: var(--gold); letter-spacing: 0.07em;
+}
+
+.daily-blessing {
+  font-size: clamp(0.85rem, 2.1vw, 0.97rem);
+  font-weight: 400; color: var(--text-light); line-height: 1.7;
+}
+
+.completion-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.45);
+  border-radius: 40px; padding: 6px 15px;
+  font-size: 0.76rem; color: var(--gold2);
+  letter-spacing: 0.1em;
+  transition: all 0.4s ease; align-self: flex-start;
+}
+.completion-badge.done {
+  background: rgba(201,168,76,0.22); border-color: var(--gold);
+  box-shadow: 0 0 14px rgba(201,168,76,0.3);
+}
+.completion-badge .stamp { font-size: 1rem; }
+
+/* ── 섹션 레이블 ─────────────────────────── */
+.section-label {
+  font-size: 0.67rem; letter-spacing: 0.32em;
+  text-transform: uppercase; color: var(--gold);
+  opacity: 0.95; margin-bottom: 15px; margin-top: 6px;
+}
+
+/* ── 카드 그리드 ─────────────────────────── */
+.cards-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 15px; margin-bottom: 18px;
+}
+@media (max-width: 520px) { .cards-grid { grid-template-columns: 1fr; } }
+
+/* ── 기도 카드 ───────────────────────────── */
+.prayer-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 24px 20px 20px;
+  position: relative; overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.3s ease;
+  cursor: pointer;
+  -webkit-user-select: none; user-select: none;
+}
+.prayer-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.28);
+  border-color: rgba(201,168,76,0.5);
+}
+.prayer-card.checked {
+  border-color: rgba(201,168,76,0.7);
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.28), 0 8px 32px rgba(201,168,76,0.14);
+}
+.prayer-card.checked::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(201,168,76,0.11) 0%, transparent 70%);
+  pointer-events: none;
+}
+.prayer-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 20%; right: 20%; height: 1.5px;
+  border-radius: 2px; opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.prayer-card.checked::before { opacity: 1; }
+.card-wealth::before  { background: linear-gradient(90deg, transparent, #c9a84c, transparent); }
+.card-family::before  { background: linear-gradient(90deg, transparent, #8b9dc3, transparent); }
+.card-health::before  { background: linear-gradient(90deg, transparent, #6ba888, transparent); }
+.card-wish::before    { background: linear-gradient(90deg, transparent, #b06090, transparent); }
+
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; }
+
+.card-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+.prayer-card:hover .card-icon { transform: scale(1.08); }
+
+.icon-wealth { background: rgba(201,168,76,0.18); }
+.icon-family { background: rgba(139,157,195,0.18); }
+.icon-health { background: rgba(107,168,136,0.18); }
+.icon-wish   { background: rgba(176,96,144,0.18); }
+
+.card-category {
+  font-size: 0.65rem; letter-spacing: 0.22em;
+  text-transform: uppercase; opacity: 0.75; margin-bottom: 1px;
+}
+.card-title { font-size: 1.02rem; font-weight: 700; letter-spacing: 0.02em; }
+
+.card-prayer {
+  font-size: 0.82rem; font-weight: 400;
+  line-height: 1.78; color: rgba(255,255,255,0.90);
+  margin-bottom: 14px;
+}
+
+.card-affirmation {
+  font-size: 0.86rem; font-style: italic;
+  color: var(--gold2); opacity: 1;
+  border-left: 2px solid rgba(224,188,90,0.6);
+  padding-left: 11px; line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.card-check {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.74rem; color: var(--text-dim);
+  transition: color 0.3s ease;
+}
+.prayer-card.checked .card-check { color: var(--gold2); }
+
+.check-circle {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.22);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; flex-shrink: 0;
+  transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.prayer-card.checked .check-circle {
+  border-color: var(--gold); background: var(--gold);
+  color: var(--navy); box-shadow: 0 0 10px rgba(201,168,76,0.5);
+  transform: scale(1.1);
+}
+
+/* ── 소망 카드 ───────────────────────────── */
+.wish-input-wrap { margin-bottom: 12px; }
+.wish-input-wrap textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 10px; padding: 10px 12px;
+  color: var(--white); font-family: inherit;
+  font-size: 0.79rem; font-weight: 300;
+  line-height: 1.68; resize: none;
+  transition: border-color 0.25s ease; min-height: 76px;
+}
+.wish-input-wrap textarea::placeholder { color: rgba(255,255,255,0.28); }
+.wish-input-wrap textarea:focus {
+  outline: none; border-color: rgba(201,168,76,0.5);
+  background: rgba(255,255,255,0.09);
+}
+.card-full { grid-column: 1 / -1; }
+
+/* ── 완료 버튼 ───────────────────────────── */
+.complete-section { text-align: center; margin-top: 30px; }
+
+.complete-btn {
+  display: inline-flex; align-items: center; gap: 11px;
+  background: linear-gradient(135deg, #b8902a 0%, #c9a84c 40%, #e8c96a 100%);
+  color: #1a1530; border: none; border-radius: 50px;
+  padding: 17px 42px;
+  font-family: inherit; font-size: 0.93rem; font-weight: 700;
+  letter-spacing: 0.14em; cursor: pointer;
+  box-shadow: 0 6px 28px rgba(201,168,76,0.38);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  position: relative; overflow: hidden;
+}
+.complete-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
+}
+.complete-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 36px rgba(201,168,76,0.52);
+}
+.complete-btn:active:not(:disabled) { transform: scale(0.98); }
+.complete-btn:disabled {
+  background: linear-gradient(135deg, rgba(201,168,76,0.32) 0%, rgba(201,168,76,0.48) 100%);
+  color: rgba(255,255,255,0.55); cursor: default; box-shadow: none;
+}
+.btn-icon { font-size: 1.1rem; }
+.complete-done-msg {
+  margin-top: 14px; font-size: 0.8rem;
+  color: var(--gold); opacity: 0.8; letter-spacing: 0.07em;
+  font-weight: 300; min-height: 1.4em;
+}
+
+/* ── 하단 기도 마무리 ─────────────────────── */
+.footer-prayer {
+  text-align: center; margin-top: 50px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(224,188,90,0.22);
+  font-size: clamp(0.85rem, 2.1vw, 0.98rem);
+  font-style: italic; font-weight: 300;
+  color: rgba(255,255,255,0.72); line-height: 1.9;
+  letter-spacing: 0.04em;
+}
+.footer-prayer strong {
+  display: block; font-weight: 700; font-style: normal;
+  color: var(--gold); letter-spacing: 0.2em;
+  font-size: 0.68rem; margin-bottom: 9px; text-transform: uppercase;
+}
+
+/* ── 애니메이션 ──────────────────────────── */
+@keyframes float-up {
+  0%   { transform: translateY(0) scale(1); opacity: 0.85; }
+  100% { transform: translateY(-90px) scale(0.2); opacity: 0; }
+}
+@keyframes halo-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
+  50%      { box-shadow: 0 0 0 18px rgba(201,168,76,0.1); }
+}
+@keyframes badge-pop {
+  0%  { transform: scale(0.7); opacity: 0; }
+  70% { transform: scale(1.12); }
+  100%{ transform: scale(1); opacity: 1; }
+}
+.prayer-card.halo-anim { animation: halo-pulse 1.2s ease 0s 2; }
+.badge-pop { animation: badge-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+.particle {
+  position: fixed; pointer-events: none; z-index: 999;
+  font-size: 1.05rem;
+  animation: float-up 1.6s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+
+<!-- ── 첫 접속 오버레이 ── -->
+<div class="intro-overlay" id="intro-overlay">
+  <div class="intro-cross">✝</div>
+  <div class="intro-title">우리 가족의 기도</div>
+  <div class="intro-sub">
+    이미 이루어졌습니다<br>
+    <span style="font-size:0.75rem; letter-spacing:0.14em;">Gratias agimus tibi</span>
+  </div>
+  <button class="intro-btn" onclick="enterSite()">🙏&nbsp; 기도 시작하기</button>
+  <div style="font-size:0.68rem; color:rgba(255,255,255,0.25); letter-spacing:0.1em; margin-top:4px;">
+    ♩ 성가 음악과 함께 시작됩니다
+  </div>
+</div>
+
+<!-- ── 음악 플레이어 바 ── -->
+<div class="music-bar">
+  <button class="music-toggle" id="music-toggle" onclick="toggleMusic()" title="음악 재생/정지">
+    <span id="music-btn-icon">▶</span>
+  </button>
+  <div class="music-info">
+    <div class="music-title" id="music-title">♩ 파이프 오르간 성가 — Ave Maria</div>
+    <div class="music-sub">우리 가족의 기도를 위한 묵상 음악</div>
+  </div>
+  <div class="music-wave" id="music-wave">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <div class="vol-wrap">
+    <span class="vol-icon">🔊</span>
+    <input type="range" class="vol-slider" id="vol-slider"
+           min="0" max="1" step="0.05" value="0.45"
+           oninput="setVolume(this.value)">
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- ── 헤더 ── -->
+  <header>
+    <div class="cross-icon">✝&nbsp;&nbsp;✦&nbsp;&nbsp;✝</div>
+    <h1 class="site-title">우리 가족의 기도</h1>
+    <p class="site-subtitle">이미 이루어졌습니다 &nbsp;·&nbsp; Gratias agimus tibi</p>
+  </header>
+
+  <!-- ── 날짜 배너 ── -->
+  <div class="date-banner">
+    <span class="today-date" id="today-date"></span>
+    <p class="daily-blessing" id="daily-blessing"></p>
+    <span class="completion-badge" id="completion-badge">
+      <span class="stamp">☆</span>
+      <span id="badge-text">아직 오늘의 기도를 완료하지 않았어요</span>
+    </span>
+  </div>
+
+  <p class="section-label">오늘의 지향 &nbsp;—&nbsp; Today's Intentions</p>
+
+  <div class="cards-grid">
+
+    <!-- 재물 -->
+    <div class="prayer-card card-wealth" id="card-wealth" onclick="toggleCard('wealth')">
+      <div class="card-header">
+        <div class="card-icon icon-wealth">💛</div>
+        <div>
+          <div class="card-category">Wealth</div>
+          <div class="card-title">재물과 풍요</div>
+        </div>
+      </div>
+      <p class="card-prayer">
+        주님, 저희 가정에 풍요의 문을 열어 주시고 모든 필요를 채워 주심에 이미 감사드립니다. 받은 것을 나누는 지혜로운 청지기가 되게 하소서.
+      </p>
+      <p class="card-affirmation">
+        "우리 가정에는 이미 넘치는 풍요가 흐릅니다.<br>감사합니다. 감사합니다. 감사합니다."
+      </p>
+      <div class="card-check">
+        <span class="check-circle" id="check-wealth">✓</span>
+        <span id="check-wealth-text">탭하여 기도 완료 표시</span>
+      </div>
+    </div>
+
+    <!-- 가족 -->
+    <div class="prayer-card card-family" id="card-family" onclick="toggleCard('family')">
+      <div class="card-header">
+        <div class="card-icon icon-family">🤍</div>
+        <div>
+          <div class="card-category">Family</div>
+          <div class="card-title">가족 화목</div>
+        </div>
+      </div>
+      <p class="card-prayer">
+        주님, 저희 가족 한 사람 한 사람을 당신의 사랑으로 감싸 주소서. 서로를 이해하고 축복하는 아름다운 가정이 되게 하심에 감사드립니다.
+      </p>
+      <p class="card-affirmation">
+        "우리 가족은 사랑 안에서 하나이며,<br>서로의 존재가 서로에게 선물입니다."
+      </p>
+      <div class="card-check">
+        <span class="check-circle" id="check-family">✓</span>
+        <span id="check-family-text">탭하여 기도 완료 표시</span>
+      </div>
+    </div>
+
+    <!-- 건강 -->
+    <div class="prayer-card card-health" id="card-health" onclick="toggleCard('health')">
+      <div class="card-header">
+        <div class="card-icon icon-health">💚</div>
+        <div>
+          <div class="card-category">Health</div>
+          <div class="card-title">건강과 치유</div>
+        </div>
+      </div>
+      <p class="card-prayer">
+        주님, 저희의 몸과 마음에 당신의 치유의 빛을 내려 주소서. 모든 세포가 생명으로 충만하고, 정신이 평화로 가득함에 감사드립니다.
+      </p>
+      <p class="card-affirmation">
+        "우리 몸은 이미 빛과 활력으로 넘칩니다.<br>하느님의 치유가 지금 이 순간도 임합니다."
+      </p>
+      <div class="card-check">
+        <span class="check-circle" id="check-health">✓</span>
+        <span id="check-health-text">탭하여 기도 완료 표시</span>
+      </div>
+    </div>
+
+    <!-- 소망 -->
+    <div class="prayer-card card-wish card-full" id="card-wish" onclick="handleWishCardClick(event)">
+      <div class="card-header">
+        <div class="card-icon icon-wish">🌸</div>
+        <div>
+          <div class="card-category">Special Intention</div>
+          <div class="card-title">특별 소망</div>
+        </div>
+      </div>
+      <div class="wish-input-wrap">
+        <textarea
+          id="wish-text"
+          placeholder="오늘 특별히 주님께 맡기고 싶은 소망을 적어 주세요. 이미 이루어졌다고 믿으며 감사의 마음으로 써 내려가세요…"
+          rows="3"
+          onclick="event.stopPropagation()"
+          oninput="saveWish()"
+        ></textarea>
+      </div>
+      <p class="card-affirmation" id="wish-affirmation" style="display:none"></p>
+      <div class="card-check">
+        <span class="check-circle" id="check-wish">✓</span>
+        <span id="check-wish-text">탭하여 기도 완료 표시</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── 완료 버튼 ── -->
+  <div class="complete-section">
+    <button class="complete-btn" id="complete-btn" onclick="completeAllPrayer()">
+      <span class="btn-icon">🙏</span>
+      <span id="btn-label">오늘의 기도 바치기</span>
+    </button>
+    <p class="complete-done-msg" id="complete-done-msg"></p>
+  </div>
+
+  <div class="footer-prayer">
+    <strong>Amen &nbsp;·&nbsp; 아멘</strong>
+    주님의 뜻이 하늘에서와 같이 땅에서도 이루어지소서.<br>
+    우리가 구하는 것은 이미 이루어졌습니다.<br>
+    <em>감사합니다. 감사합니다. 감사합니다.</em>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   오르간 성가 음악 엔진 (Web Audio API)
+   Ave Maria 풍 파이프 오르간 합성
+════════════════════════════════════════════════ */
+let audioCtx = null;
+let masterGain = null;
+let reverbNode = null;
+let isPlaying = false;
+let scheduleTimer = null;
+let nextNoteTime = 0;
+let currentVolume = 0.45;
+let noteIndex = 0;
+
+/* ── 오르간 음색 생성 (파이프 오르간 하모닉스) ── */
+function createOrganOscillator(freq, startTime, duration, gainVal) {
+  if (!audioCtx) return;
+  const g = audioCtx.createGain();
+  g.connect(reverbNode || masterGain);
+
+  // 파이프 오르간 = 기본파 + 옥타브 + 5도 + 2옥타브 중첩
+  const harmonics = [
+    { mult: 1,    amp: 1.0  },
+    { mult: 2,    amp: 0.55 },
+    { mult: 3,    amp: 0.28 },
+    { mult: 4,    amp: 0.18 },
+    { mult: 6,    amp: 0.10 },
+    { mult: 8,    amp: 0.06 },
+  ];
+
+  harmonics.forEach(h => {
+    const osc = audioCtx.createOscillator();
+    const hg  = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq * h.mult, startTime);
+    hg.gain.setValueAtTime(gainVal * h.amp * 0.22, startTime);
+    // 느린 어택 (오르간 특성)
+    hg.gain.linearRampToValueAtTime(gainVal * h.amp * 0.22, startTime + 0.08);
+    // 릴리즈
+    hg.gain.setValueAtTime(gainVal * h.amp * 0.22, startTime + duration - 0.12);
+    hg.gain.linearRampToValueAtTime(0, startTime + duration);
+    osc.connect(hg);
+    hg.connect(g);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.05);
+  });
+
+  g.gain.setValueAtTime(1, startTime);
+}
+
+/* ── 리버브 (공간감 / 성당 울림) ── */
+function createReverb(ctx) {
+  const convolver = ctx.createConvolver();
+  const sampleRate = ctx.sampleRate;
+  const length = sampleRate * 3.2; // 3.2초 잔향
+  const impulse = ctx.createBuffer(2, length, sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = impulse.getChannelData(ch);
+    for (let i = 0; i < length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.2);
+    }
+  }
+  convolver.buffer = impulse;
+  convolver.connect(masterGain);
+  return convolver;
+}
+
+/* ── Ave Maria 풍 멜로디 시퀀스 ── */
+// 음계: C4=261.63 D4=293.66 E4=329.63 F4=349.23 G4=392 A4=440 B4=493.88
+// Ab4=415.30, Bb4=466.16, Eb4=311.13, F#4=369.99
+const C3=130.81, D3=146.83, E3=164.81, F3=174.61, G3=196, A3=220, B3=246.94;
+const C4=261.63, D4=293.66, E4=329.63, F4=349.23, G4=392, A4=440, B4=493.88;
+const Ab4=415.30, Bb4=466.16, Eb4=311.13, Db4=277.18, Gb4=369.99;
+const C5=523.25, D5=587.33, E5=659.25, F5=698.46, G5=784;
+const Ab3=207.65, Bb3=233.08;
+
+// [주선율, 베이스, 내성] 형태의 화음 진행, [duration_beats]
+// Ave Maria (Bach/Gounod) 스타일 + 후반 독자 선율
+const SEQUENCE = [
+  // 인트로 아르페지오
+  { notes:[C4,E4,G4], bass:C3, dur:1.8 },
+  { notes:[D4,F4,A4], bass:D3, dur:1.8 },
+  { notes:[E4,G4,C5], bass:C3, dur:1.8 },
+  { notes:[F4,A4,C5], bass:F3, dur:1.8 },
+  // Ave Maria 주제부
+  { notes:[G4,B4,D5], bass:G3, dur:2.2 },
+  { notes:[A4,C5,E5], bass:A3, dur:1.6 },
+  { notes:[G4,B4,D5], bass:G3, dur:1.6 },
+  { notes:[F4,A4,C5], bass:F3, dur:2.2 },
+  { notes:[E4,G4,C5], bass:C3, dur:1.6 },
+  { notes:[D4,F4,A4], bass:D3, dur:1.6 },
+  { notes:[C4,E4,G4], bass:C3, dur:2.4 },
+  // 중간부 (서정)
+  { notes:[E4,Ab4,C5], bass:A3, dur:2.0 },
+  { notes:[F4,A4,C5],  bass:F3, dur:1.8 },
+  { notes:[G4,Bb4,D5], bass:G3, dur:1.8 },
+  { notes:[Ab4,C5,Eb4+392], bass:Ab3, dur:2.2 },
+  { notes:[G4,B4,D5],  bass:G3, dur:1.6 },
+  { notes:[F4,A4,C5],  bass:F3, dur:1.6 },
+  // 클라이맥스
+  { notes:[E5,C5,G4],  bass:C3, dur:2.4 },
+  { notes:[D5,B4,G4],  bass:G3, dur:1.8 },
+  { notes:[C5,A4,F4],  bass:F3, dur:1.8 },
+  { notes:[B4,G4,D4],  bass:G3, dur:2.0 },
+  { notes:[C5,E4,G4],  bass:C3, dur:2.8 },
+  // 아멘 코다
+  { notes:[F4,A4,C5],  bass:F3, dur:2.0 },
+  { notes:[G4,B4,D5],  bass:G3, dur:2.0 },
+  { notes:[C4,E4,G4],  bass:C3, dur:3.2 },
+];
+
+const BEAT_SEC = 1.05; // 템포 (느린 성가 풍)
+
+function scheduleNotes() {
+  if (!isPlaying || !audioCtx) return;
+
+  while (nextNoteTime < audioCtx.currentTime + 0.5) {
+    const step = SEQUENCE[noteIndex % SEQUENCE.length];
+    const dur = step.dur * BEAT_SEC;
+    const t = nextNoteTime;
+
+    // 베이스
+    createOrganOscillator(step.bass, t, dur, 0.75);
+
+    // 화음 음표들 (살짝 시간차로 아르페지오 느낌)
+    step.notes.forEach((freq, i) => {
+      createOrganOscillator(freq, t + i * 0.045, dur - i * 0.04, 0.55 - i * 0.08);
+    });
+
+    nextNoteTime += dur;
+    noteIndex++;
+  }
+  scheduleTimer = setTimeout(scheduleNotes, 200);
+}
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.setValueAtTime(currentVolume, audioCtx.currentTime);
+  masterGain.connect(audioCtx.destination);
+  reverbNode = createReverb(audioCtx);
+}
+
+function startMusic() {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  isPlaying = true;
+  nextNoteTime = audioCtx.currentTime + 0.1;
+  scheduleNotes();
+  updateMusicUI();
+}
+
+function stopMusic() {
+  isPlaying = false;
+  clearTimeout(scheduleTimer);
+  updateMusicUI();
+}
+
+function toggleMusic() {
+  if (isPlaying) stopMusic(); else startMusic();
+}
+
+function setVolume(val) {
+  currentVolume = parseFloat(val);
+  if (masterGain) masterGain.gain.setValueAtTime(currentVolume, audioCtx.currentTime);
+}
+
+function updateMusicUI() {
+  const btn   = document.getElementById('music-toggle');
+  const icon  = document.getElementById('music-btn-icon');
+  const wave  = document.getElementById('music-wave');
+  if (isPlaying) {
+    btn.classList.add('playing');
+    icon.textContent = '⏸';
+    wave.classList.add('playing');
+  } else {
+    btn.classList.remove('playing');
+    icon.textContent = '▶';
+    wave.classList.remove('playing');
+  }
+}
+
+/* ════════════════════════════════════════════════
+   첫 접속 오버레이
+════════════════════════════════════════════════ */
+function enterSite() {
+  const overlay = document.getElementById('intro-overlay');
+  overlay.classList.add('hidden');
+  setTimeout(() => overlay.remove(), 750);
+  startMusic();
+}
+
+/* ════════════════════════════════════════════════
+   상태 & 유틸리티
+════════════════════════════════════════════════ */
+const CATEGORIES = ['wealth', 'family', 'health', 'wish'];
+
+const BLESSINGS = [
+  "주님께서 오늘도 당신과 함께하십니다. 이미 이루어졌습니다.",
+  "감사하는 마음이 기적을 불러옵니다. 오늘도 풍요로운 하루가 됩니다.",
+  "당신의 기도는 이미 하늘에 닿아 있습니다. 믿음이 현실을 만듭니다.",
+  "하느님의 사랑 안에서 우리 가정에는 모든 것이 충만합니다.",
+  "긍정의 에너지가 오늘 당신에게 가장 좋은 것을 끌어당깁니다.",
+  "지금 이 순간, 주님의 빛이 우리 가정을 감싸고 있습니다.",
+  "믿음과 감사로 드리는 기도는 반드시 이루어집니다.",
+];
+
+function getTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function loadState() {
+  const raw = localStorage.getItem('prayer_' + getTodayKey());
+  return raw ? JSON.parse(raw) : { cards:{}, allDone:false };
+}
+function saveState(st) {
+  localStorage.setItem('prayer_' + getTodayKey(), JSON.stringify(st));
+}
+
+/* ── 날짜 렌더 ── */
+function renderDate() {
+  const now = new Date();
+  const w = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'][now.getDay()];
+  document.getElementById('today-date').textContent =
+    `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${w} — 주님 안에서 감사드립니다`;
+  document.getElementById('daily-blessing').textContent =
+    BLESSINGS[now.getDate() % BLESSINGS.length];
+}
+
+/* ── UI 동기화 ── */
+function syncUI(state) {
+  CATEGORIES.forEach(cat => {
+    const card = document.getElementById('card-' + cat);
+    const txt  = document.getElementById('check-' + cat + '-text');
+    if (state.cards[cat]) {
+      card.classList.add('checked');
+      txt.textContent = '기도 완료 ✓';
+    } else {
+      card.classList.remove('checked');
+      txt.textContent = '탭하여 기도 완료 표시';
+    }
+  });
+
+  const wish = localStorage.getItem('wish_' + getTodayKey()) || '';
+  document.getElementById('wish-text').value = wish;
+  updateWishAffirmation(wish);
+
+  const badge    = document.getElementById('completion-badge');
+  const btn      = document.getElementById('complete-btn');
+  const doneMsg  = document.getElementById('complete-done-msg');
+
+  if (state.allDone) {
+    badge.classList.add('done');
+    badge.querySelector('.stamp').textContent = '✦';
+    document.getElementById('badge-text').textContent = '오늘의 기도를 완료했습니다';
+    btn.disabled = true;
+    document.getElementById('btn-label').textContent = '오늘의 기도 완료 ✓';
+    doneMsg.textContent = '주님, 저희 기도를 들어주심에 감사드립니다. 아멘.';
+  } else {
+    badge.classList.remove('done');
+    badge.querySelector('.stamp').textContent = '☆';
+    document.getElementById('badge-text').textContent = '아직 오늘의 기도를 완료하지 않았어요';
+    btn.disabled = false;
+    document.getElementById('btn-label').textContent = '오늘의 기도 바치기';
+    doneMsg.textContent = '';
+  }
+}
+
+/* ── 카드 토글 ── */
+function toggleCard(cat) {
+  const state = loadState();
+  state.cards[cat] = !state.cards[cat];
+  saveState(state);
+  const card = document.getElementById('card-' + cat);
+  const txt  = document.getElementById('check-' + cat + '-text');
+  if (state.cards[cat]) {
+    card.classList.add('checked','halo-anim');
+    txt.textContent = '기도 완료 ✓';
+    setTimeout(() => card.classList.remove('halo-anim'), 2500);
+  } else {
+    card.classList.remove('checked');
+    txt.textContent = '탭하여 기도 완료 표시';
+  }
+}
+
+function handleWishCardClick(e) {
+  if (e.target.tagName === 'TEXTAREA') return;
+  toggleCard('wish');
+}
+
+function saveWish() {
+  const val = document.getElementById('wish-text').value;
+  localStorage.setItem('wish_' + getTodayKey(), val);
+  updateWishAffirmation(val);
+}
+
+function updateWishAffirmation(text) {
+  const el = document.getElementById('wish-affirmation');
+  if (text && text.trim().length > 4) {
+    el.style.display = 'block';
+    el.textContent = `"${text.trim()} — 이미 이루어졌습니다."`;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+/* ── 전체 기도 완료 ── */
+function completeAllPrayer() {
+  const state = loadState();
+  CATEGORIES.forEach(cat => { state.cards[cat] = true; });
+  state.allDone = true;
+  saveState(state);
+  syncUI(state);
+  const badge = document.getElementById('completion-badge');
+  badge.classList.remove('badge-pop');
+  void badge.offsetWidth;
+  badge.classList.add('badge-pop');
+  spawnParticles();
+}
+
+/* ── 파티클 ── */
+function spawnParticles() {
+  const syms = ['✦','✧','✝','☆','✨','🙏','💛','🌟'];
+  const btn  = document.getElementById('complete-btn');
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top  + rect.height / 2;
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => {
+      const p = document.createElement('span');
+      p.className = 'particle';
+      p.textContent = syms[Math.floor(Math.random() * syms.length)];
+      const ang = Math.random() * Math.PI * 2;
+      const r   = 30 + Math.random() * 90;
+      p.style.left = (cx + Math.cos(ang)*r) + 'px';
+      p.style.top  = (cy + Math.sin(ang)*r) + 'px';
+      p.style.opacity = '0.9';
+      p.style.animationDuration = (1.2 + Math.random()*0.9) + 's';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 2300);
+    }, i * 52);
+  }
+}
+
+/* ── 별빛 캔버스 ── */
+function initStars() {
+  const canvas = document.getElementById('stars-canvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [], W, H;
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    stars = [];
+    for (let i = 0; i < 160; i++) {
+      stars.push({
+        x: Math.random()*W, y: Math.random()*H,
+        r: Math.random()*1.15+0.2,
+        speed: 0.003+Math.random()*0.006,
+        phase: Math.random()*Math.PI*2,
+      });
+    }
+  }
+  function draw(t) {
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s => {
+      const a = 0.22 + 0.52 * Math.abs(Math.sin(t*s.speed+s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(232,201,106,${a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(draw);
+}
+
+/* ── 초기화 ── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderDate();
+  syncUI(loadState());
+  initStars();
+});
+</script>
+</body>
+</html>
