@@ -4,850 +4,926 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>우리 가족의 기도 — 이미 이루어졌습니다</title>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+        integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4"
+        crossorigin="anonymous"></script>
 <style>
-/* ── 토큰 ─────────────────────────────────── */
 :root {
-  --navy:        #1a1f3a;
-  --gold:        #e0bc5a;   /* 더 밝은 골드 */
-  --gold2:       #f0d47a;   /* 더 밝은 골드2 */
-  --white:       #ffffff;
-  --text-light:  rgba(255,255,255,0.95);  /* 거의 흰색 */
-  --text-dim:    rgba(255,255,255,0.70);  /* 0.42 → 0.70 */
-  --card-bg:     rgba(255,255,255,0.09);  /* 카드 배경 약간 밝게 */
-  --card-border: rgba(224,188,90,0.40);   /* 테두리 더 선명하게 */
-  --radius:      18px;
+  --navy:   #0d0f1f;
+  --deep:   #070910;
+  --gold:   #e8c96a;
+  --gold2:  #f7e199;
+  --gold3:  #c9a84c;
+  --rose:   #c0547a;
+  --purple: #7c5cbf;
+  --white:  #ffffff;
+  --tl:     rgba(255,255,255,0.92);
+  --td:     rgba(255,255,255,0.60);
+  --radius: 20px;
 }
 
-/* ── 리셋 & 베이스 ───────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 
 body {
-  background: var(--navy);
-  color: var(--text-light);
-  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕',
-               'Noto Sans KR', sans-serif;
+  background: var(--deep);
+  color: var(--tl);
+  font-family: 'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕','Noto Sans KR',sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
-  position: relative;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ── 별빛 캔버스 ─────────────────────────── */
-#stars-canvas {
+/* ── 캔버스 레이어 ── */
+#bg-canvas {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
 }
 
-/* ── 배경 그라데이션 ─────────────────────── */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139,34,82,0.22) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(26,31,58,0.8) 0%, transparent 60%);
-  z-index: 0; pointer-events: none;
-}
-
-/* ── 전체 컨테이너 ───────────────────────── */
-.page-wrap {
+/* ── 페이지 래퍼 ── */
+.page {
   position: relative; z-index: 1;
   max-width: 860px; margin: 0 auto;
-  padding: 0 18px 90px;
+  padding: 0 16px 120px;
 }
 
-/* ── 음악 플레이어 바 ────────────────────── */
-.music-bar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 100;
-  background: rgba(20, 24, 50, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid rgba(201,168,76,0.22);
-  padding: 10px 20px 12px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.music-toggle {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(201,168,76,0.6);
-  background: rgba(201,168,76,0.12);
-  color: var(--gold2);
-  font-size: 1.05rem;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.22s ease;
-  flex-shrink: 0;
-}
-.music-toggle:hover {
-  background: rgba(201,168,76,0.25);
-  box-shadow: 0 0 12px rgba(201,168,76,0.3);
-}
-.music-toggle.playing {
-  border-color: var(--gold);
-  background: rgba(201,168,76,0.2);
-  box-shadow: 0 0 14px rgba(201,168,76,0.35);
-}
-
-.music-info {
-  flex: 1;
-  min-width: 0;
-}
-.music-title {
-  font-size: 0.75rem;
-  color: var(--gold);
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.music-sub {
-  font-size: 0.67rem;
-  color: rgba(255,255,255,0.65);
-  letter-spacing: 0.06em;
-  margin-top: 2px;
-}
-
-/* 음파 애니메이션 */
-.music-wave {
-  display: flex; align-items: center; gap: 3px;
-  height: 20px;
-}
-.music-wave span {
-  display: block;
-  width: 3px;
-  background: var(--gold);
-  border-radius: 2px;
-  opacity: 0.7;
-}
-.music-wave span:nth-child(1) { height: 6px; }
-.music-wave span:nth-child(2) { height: 14px; }
-.music-wave span:nth-child(3) { height: 10px; }
-.music-wave span:nth-child(4) { height: 18px; }
-.music-wave span:nth-child(5) { height: 8px; }
-
-@keyframes wave1 { 0%,100%{height:6px}  50%{height:16px} }
-@keyframes wave2 { 0%,100%{height:14px} 50%{height:5px}  }
-@keyframes wave3 { 0%,100%{height:10px} 50%{height:20px} }
-@keyframes wave4 { 0%,100%{height:18px} 50%{height:7px}  }
-@keyframes wave5 { 0%,100%{height:8px}   50%{height:14px} }
-
-.music-wave.playing span:nth-child(1) { animation: wave1 1.1s ease-in-out infinite; }
-.music-wave.playing span:nth-child(2) { animation: wave2 0.9s ease-in-out infinite; }
-.music-wave.playing span:nth-child(3) { animation: wave3 1.3s ease-in-out infinite; }
-.music-wave.playing span:nth-child(4) { animation: wave4 0.8s ease-in-out infinite; }
-.music-wave.playing span:nth-child(5) { animation: wave5 1.0s ease-in-out infinite; }
-
-/* 볼륨 슬라이더 */
-.vol-wrap {
-  display: flex; align-items: center; gap: 7px;
-  flex-shrink: 0;
-}
-.vol-icon { font-size: 0.85rem; color: var(--text-dim); }
-input[type=range].vol-slider {
-  -webkit-appearance: none;
-  width: 70px; height: 3px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 2px; outline: none; cursor: pointer;
-}
-input[type=range].vol-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 6px rgba(201,168,76,0.5);
-}
-
-/* 첫 접속 오버레이 (브라우저 정책: 첫 클릭 후 자동재생) */
-.intro-overlay {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(15,18,40,0.96);
+/* ══════════════════════════════
+   인트로 오버레이
+══════════════════════════════ */
+.intro {
+  position: fixed; inset: 0; z-index: 900;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 20px;
-  text-align: center;
-  padding: 30px;
-  transition: opacity 0.7s ease;
+  background: radial-gradient(ellipse 120% 120% at 50% 60%,
+    #1a0d2e 0%, #0a0c1e 50%, #000 100%);
+  text-align: center; padding: 30px;
+  transition: opacity .8s ease;
 }
-.intro-overlay.hidden {
-  opacity: 0; pointer-events: none;
+.intro.hidden { opacity: 0; pointer-events: none; }
+
+.intro-sigil {
+  font-size: 3rem; margin-bottom: 8px;
+  filter: drop-shadow(0 0 20px rgba(232,201,106,0.8));
+  animation: sigil-pulse 2.5s ease-in-out infinite;
+}
+@keyframes sigil-pulse {
+  0%,100% { filter: drop-shadow(0 0 16px rgba(232,201,106,0.6)); transform: scale(1); }
+  50%      { filter: drop-shadow(0 0 36px rgba(232,201,106,1));   transform: scale(1.06); }
 }
 
-.intro-cross {
-  font-size: 2.2rem;
-  color: var(--gold);
-  margin-bottom: 4px;
-}
 .intro-title {
-  font-size: clamp(1.3rem, 5vw, 1.8rem);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--white);
-  line-height: 1.4;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  font-weight: 700; color: #fff;
+  line-height: 1.35; margin-bottom: 8px;
+  letter-spacing: 0.04em;
 }
-.intro-sub {
-  font-size: 0.88rem;
-  color: rgba(255,255,255,0.80);
-  letter-spacing: 0.12em;
-  line-height: 1.7;
+.intro-latin {
+  font-style: italic; font-size: .8rem;
+  color: var(--gold); opacity: .75;
+  letter-spacing: .22em; margin-bottom: 28px;
 }
 .intro-btn {
-  margin-top: 8px;
-  padding: 16px 48px;
-  border-radius: 50px;
-  background: linear-gradient(135deg, #b8902a, #c9a84c, #e8c96a);
-  border: none;
-  color: #1a1530;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  cursor: pointer;
-  box-shadow: 0 6px 28px rgba(201,168,76,0.45);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  font-family: inherit;
+  padding: 16px 50px; border-radius: 50px; border: none;
+  background: linear-gradient(135deg,#a07828,#c9a84c,#f0d47a);
+  color: #1a0d00; font-family: inherit;
+  font-size: 1rem; font-weight: 700;
+  letter-spacing: .14em; cursor: pointer;
+  box-shadow: 0 0 40px rgba(201,168,76,.5), 0 6px 20px rgba(0,0,0,.4);
+  transition: transform .2s, box-shadow .2s;
 }
-.intro-btn:hover { transform: scale(1.04); box-shadow: 0 10px 36px rgba(201,168,76,0.6); }
-
-/* ── 헤더 ────────────────────────────────── */
-header { text-align: center; padding: 50px 0 34px; }
-
-.cross-icon {
-  display: inline-block; font-size: 1.6rem;
-  color: var(--gold); letter-spacing: 0.12em;
-  margin-bottom: 14px; opacity: 0.9;
+.intro-btn:hover { transform: scale(1.04); box-shadow: 0 0 60px rgba(201,168,76,.7); }
+.intro-note {
+  margin-top: 14px; font-size: .68rem;
+  color: rgba(255,255,255,.28); letter-spacing: .1em;
 }
 
-.site-title {
-  font-size: clamp(1.5rem, 4.5vw, 2.4rem);
-  font-weight: 700;
-  color: var(--white);
-  letter-spacing: 0.04em;
-  line-height: 1.25;
-  margin-bottom: 6px;
+/* ══════════════════════════════
+   헤더
+══════════════════════════════ */
+header {
+  text-align: center; padding: 52px 0 32px;
+}
+.hdr-cross {
+  font-size: 1.5rem; color: var(--gold);
+  letter-spacing: .2em; margin-bottom: 12px;
+  filter: drop-shadow(0 0 8px rgba(232,201,106,.5));
+}
+.hdr-title {
+  font-size: clamp(1.5rem,4.5vw,2.4rem);
+  font-weight: 700; letter-spacing: .04em;
+  background: linear-gradient(135deg,#f0d47a,#e8c96a,#c9a84c);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 6px;
+}
+.hdr-sub {
+  font-size: .7rem; letter-spacing: .28em;
+  text-transform: uppercase; color: var(--gold); opacity: .75;
 }
 
-.site-subtitle {
-  font-size: 0.7rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--gold);
-  opacity: 1;
-}
-
-/* ── 날짜 배너 ───────────────────────────── */
+/* ══════════════════════════════
+   날짜 배너
+══════════════════════════════ */
 .date-banner {
-  background: linear-gradient(135deg, rgba(201,168,76,0.13) 0%, rgba(139,34,82,0.10) 100%);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
-  padding: 22px 26px; margin-bottom: 26px;
-  display: flex; flex-direction: column; gap: 8px;
   position: relative; overflow: hidden;
+  background: linear-gradient(135deg,rgba(232,201,106,.1),rgba(124,92,191,.08));
+  border: 1px solid rgba(232,201,106,.3);
+  border-radius: var(--radius); padding: 20px 24px;
+  margin-bottom: 24px;
 }
 .date-banner::before {
-  content: ''; position: absolute;
-  top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  content:''; position:absolute; top:0;left:15%;right:15%;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
 }
-
-.today-date {
-  font-size: clamp(0.88rem, 2.4vw, 1.0rem);
-  font-weight: 400; color: var(--gold); letter-spacing: 0.07em;
+.date-top {
+  font-size: clamp(.85rem,2.2vw,.98rem);
+  color: var(--gold); letter-spacing: .07em; margin-bottom: 6px;
 }
-
-.daily-blessing {
-  font-size: clamp(0.85rem, 2.1vw, 0.97rem);
-  font-weight: 400; color: var(--text-light); line-height: 1.7;
+.date-blessing {
+  font-size: clamp(.82rem,2vw,.94rem);
+  color: var(--tl); line-height: 1.7; margin-bottom: 12px;
 }
-
-.completion-badge {
+.badge {
   display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(201,168,76,0.12);
-  border: 1px solid rgba(201,168,76,0.45);
-  border-radius: 40px; padding: 6px 15px;
-  font-size: 0.76rem; color: var(--gold2);
-  letter-spacing: 0.1em;
-  transition: all 0.4s ease; align-self: flex-start;
+  background: rgba(232,201,106,.1); border: 1px solid rgba(232,201,106,.35);
+  border-radius: 30px; padding: 5px 14px;
+  font-size: .74rem; color: var(--gold2); letter-spacing: .1em;
+  transition: all .4s ease;
 }
-.completion-badge.done {
-  background: rgba(201,168,76,0.22); border-color: var(--gold);
-  box-shadow: 0 0 14px rgba(201,168,76,0.3);
+.badge.done {
+  background: rgba(232,201,106,.2); border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(232,201,106,.3);
 }
-.completion-badge .stamp { font-size: 1rem; }
 
-/* ── 섹션 레이블 ─────────────────────────── */
-.section-label {
-  font-size: 0.67rem; letter-spacing: 0.32em;
+/* ══════════════════════════════
+   섹션 레이블
+══════════════════════════════ */
+.sec-label {
+  font-size: .65rem; letter-spacing: .32em;
   text-transform: uppercase; color: var(--gold);
-  opacity: 0.95; margin-bottom: 15px; margin-top: 6px;
+  margin-bottom: 14px; margin-top: 6px;
 }
 
-/* ── 카드 그리드 ─────────────────────────── */
-.cards-grid {
+/* ══════════════════════════════
+   카드 그리드
+══════════════════════════════ */
+.grid {
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: 15px; margin-bottom: 18px;
+  gap: 14px; margin-bottom: 16px;
 }
-@media (max-width: 520px) { .cards-grid { grid-template-columns: 1fr; } }
+@media(max-width:520px){ .grid{ grid-template-columns:1fr; } }
 
-/* ── 기도 카드 ───────────────────────────── */
-.prayer-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
-  padding: 24px 20px 20px;
+/* ── 기도 카드 ── */
+.card {
   position: relative; overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.3s ease;
-  cursor: pointer;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(232,201,106,.22);
+  border-radius: var(--radius); padding: 22px 18px 18px;
+  cursor: pointer; transition: transform .22s, border-color .3s, box-shadow .3s;
   -webkit-user-select: none; user-select: none;
 }
-.prayer-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 36px rgba(0,0,0,0.28);
-  border-color: rgba(201,168,76,0.5);
-}
-.prayer-card.checked {
-  border-color: rgba(201,168,76,0.7);
-  box-shadow: 0 0 0 1px rgba(201,168,76,0.28), 0 8px 32px rgba(201,168,76,0.14);
-}
-.prayer-card.checked::after {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(201,168,76,0.11) 0%, transparent 70%);
-  pointer-events: none;
-}
-.prayer-card::before {
-  content: ''; position: absolute;
-  top: 0; left: 20%; right: 20%; height: 1.5px;
-  border-radius: 2px; opacity: 0;
-  transition: opacity 0.4s ease;
-}
-.prayer-card.checked::before { opacity: 1; }
-.card-wealth::before  { background: linear-gradient(90deg, transparent, #c9a84c, transparent); }
-.card-family::before  { background: linear-gradient(90deg, transparent, #8b9dc3, transparent); }
-.card-health::before  { background: linear-gradient(90deg, transparent, #6ba888, transparent); }
-.card-wish::before    { background: linear-gradient(90deg, transparent, #b06090, transparent); }
+.card:hover { transform: translateY(-3px); border-color: rgba(232,201,106,.5); }
 
-.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; }
+.card.checked {
+  border-color: rgba(232,201,106,.7);
+  box-shadow: 0 0 0 1px rgba(232,201,106,.25),
+              0 8px 40px rgba(232,201,106,.12),
+              inset 0 0 30px rgba(232,201,106,.04);
+}
+/* 상단 빛줄기 */
+.card::before {
+  content:''; position:absolute; top:0;left:20%;right:20%;
+  height:1.5px; border-radius:2px; opacity:0;
+  transition: opacity .4s;
+}
+.card.checked::before { opacity:1; }
+.c-wealth::before { background:linear-gradient(90deg,transparent,#e8c96a,transparent); }
+.c-family::before { background:linear-gradient(90deg,transparent,#8bb8e8,transparent); }
+.c-health::before { background:linear-gradient(90deg,transparent,#6bc8a0,transparent); }
+.c-wish::before   { background:linear-gradient(90deg,transparent,#c07adf,transparent); }
 
+/* 내부 성광 효과 */
+.card.checked::after {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,
+    rgba(232,201,106,.1) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.card-hd { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
 .card-icon {
-  width: 40px; height: 40px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.2rem; flex-shrink: 0;
-  transition: transform 0.3s ease;
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.25rem; flex-shrink:0;
+  transition:transform .3s;
 }
-.prayer-card:hover .card-icon { transform: scale(1.08); }
+.card:hover .card-icon { transform:scale(1.1); }
+.ic-wealth { background:rgba(232,201,106,.16); box-shadow:0 0 12px rgba(232,201,106,.2); }
+.ic-family { background:rgba(139,184,232,.14); box-shadow:0 0 12px rgba(139,184,232,.15); }
+.ic-health { background:rgba(107,200,160,.14); box-shadow:0 0 12px rgba(107,200,160,.15); }
+.ic-wish   { background:rgba(192,122,223,.14); box-shadow:0 0 12px rgba(192,122,223,.18); }
 
-.icon-wealth { background: rgba(201,168,76,0.18); }
-.icon-family { background: rgba(139,157,195,0.18); }
-.icon-health { background: rgba(107,168,136,0.18); }
-.icon-wish   { background: rgba(176,96,144,0.18); }
-
-.card-category {
-  font-size: 0.65rem; letter-spacing: 0.22em;
-  text-transform: uppercase; opacity: 0.75; margin-bottom: 1px;
-}
-.card-title { font-size: 1.02rem; font-weight: 700; letter-spacing: 0.02em; }
+.card-cat  { font-size:.63rem; letter-spacing:.2em; text-transform:uppercase; opacity:.6; margin-bottom:1px; }
+.card-name { font-size:1rem; font-weight:700; }
 
 .card-prayer {
-  font-size: 0.82rem; font-weight: 400;
-  line-height: 1.78; color: rgba(255,255,255,0.90);
-  margin-bottom: 14px;
+  font-size:.8rem; line-height:1.78;
+  color:rgba(255,255,255,.88); margin-bottom:13px;
 }
 
-.card-affirmation {
-  font-size: 0.86rem; font-style: italic;
-  color: var(--gold2); opacity: 1;
-  border-left: 2px solid rgba(224,188,90,0.6);
-  padding-left: 11px; line-height: 1.6;
-  margin-bottom: 16px;
+/* 확언 문구 */
+.card-affirm {
+  font-style:italic; font-size:.84rem;
+  color:var(--gold2); line-height:1.6;
+  border-left:2px solid rgba(232,201,106,.5);
+  padding-left:11px; margin-bottom:15px;
 }
 
-.card-check {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 0.74rem; color: var(--text-dim);
-  transition: color 0.3s ease;
+.card-ck {
+  display:flex; align-items:center; gap:7px;
+  font-size:.73rem; color:rgba(255,255,255,.5);
+  transition:color .3s;
 }
-.prayer-card.checked .card-check { color: var(--gold2); }
+.card.checked .card-ck { color:var(--gold2); }
 
-.check-circle {
-  width: 20px; height: 20px; border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.22);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.68rem; flex-shrink: 0;
-  transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+.ck-circle {
+  width:20px;height:20px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.68rem; flex-shrink:0;
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);
 }
-.prayer-card.checked .check-circle {
-  border-color: var(--gold); background: var(--gold);
-  color: var(--navy); box-shadow: 0 0 10px rgba(201,168,76,0.5);
-  transform: scale(1.1);
+.card.checked .ck-circle {
+  border-color:var(--gold); background:var(--gold);
+  color:#1a0d00; box-shadow:0 0 14px rgba(232,201,106,.6);
+  transform:scale(1.12);
 }
 
-/* ── 소망 카드 ───────────────────────────── */
-.wish-input-wrap { margin-bottom: 12px; }
-.wish-input-wrap textarea {
-  width: 100%;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(201,168,76,0.2);
-  border-radius: 10px; padding: 10px 12px;
-  color: var(--white); font-family: inherit;
-  font-size: 0.79rem; font-weight: 300;
-  line-height: 1.68; resize: none;
-  transition: border-color 0.25s ease; min-height: 76px;
+/* 소망 textarea */
+.wish-wrap { margin-bottom:11px; }
+.wish-wrap textarea {
+  width:100%; background:rgba(255,255,255,.07);
+  border:1px solid rgba(232,201,106,.2); border-radius:11px;
+  padding:10px 12px; color:#fff;
+  font-family:inherit; font-size:.79rem; line-height:1.7;
+  resize:none; min-height:76px;
+  transition:border-color .25s, background .25s;
 }
-.wish-input-wrap textarea::placeholder { color: rgba(255,255,255,0.28); }
-.wish-input-wrap textarea:focus {
-  outline: none; border-color: rgba(201,168,76,0.5);
-  background: rgba(255,255,255,0.09);
+.wish-wrap textarea::placeholder { color:rgba(255,255,255,.3); }
+.wish-wrap textarea:focus {
+  outline:none; border-color:rgba(232,201,106,.55);
+  background:rgba(255,255,255,.1);
 }
-.card-full { grid-column: 1 / -1; }
+.card-full { grid-column:1/-1; }
 
-/* ── 완료 버튼 ───────────────────────────── */
-.complete-section { text-align: center; margin-top: 30px; }
+/* ══════════════════════════════
+   우주 발사 섹션 (핵심 추가!)
+══════════════════════════════ */
+.launch-section {
+  margin-top: 32px;
+  position: relative;
+}
 
-.complete-btn {
-  display: inline-flex; align-items: center; gap: 11px;
-  background: linear-gradient(135deg, #b8902a 0%, #c9a84c 40%, #e8c96a 100%);
-  color: #1a1530; border: none; border-radius: 50px;
-  padding: 17px 42px;
-  font-family: inherit; font-size: 0.93rem; font-weight: 700;
-  letter-spacing: 0.14em; cursor: pointer;
-  box-shadow: 0 6px 28px rgba(201,168,76,0.38);
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+/* 우주 발사 버튼 */
+.launch-btn {
+  width: 100%; padding: 0;
+  background: none; border: none; cursor: pointer;
+  position: relative;
+}
+.launch-btn-inner {
   position: relative; overflow: hidden;
+  background: linear-gradient(135deg,#6b1e6b,#8b2a8b,#4a1a7a,#1a1a5a);
+  border: 1.5px solid rgba(232,201,106,.5);
+  border-radius: 22px; padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(124,92,191,.3), 0 8px 32px rgba(0,0,0,.5);
+  transition: transform .2s, box-shadow .2s;
 }
-.complete-btn::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
+.launch-btn:hover .launch-btn-inner {
+  transform: scale(1.01);
+  box-shadow: 0 0 60px rgba(124,92,191,.5), 0 12px 40px rgba(0,0,0,.5);
 }
-.complete-btn:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 10px 36px rgba(201,168,76,0.52);
+.launch-btn:disabled .launch-btn-inner {
+  background: linear-gradient(135deg,#2a1a2a,#1e1a3a);
+  cursor: default;
 }
-.complete-btn:active:not(:disabled) { transform: scale(0.98); }
-.complete-btn:disabled {
-  background: linear-gradient(135deg, rgba(201,168,76,0.32) 0%, rgba(201,168,76,0.48) 100%);
-  color: rgba(255,255,255,0.55); cursor: default; box-shadow: none;
+.launch-btn-inner::before {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(ellipse 60% 50% at 50% 0%,
+    rgba(255,200,100,.18) 0%, transparent 70%);
+  pointer-events:none;
 }
-.btn-icon { font-size: 1.1rem; }
-.complete-done-msg {
-  margin-top: 14px; font-size: 0.8rem;
-  color: var(--gold); opacity: 0.8; letter-spacing: 0.07em;
-  font-weight: 300; min-height: 1.4em;
+/* 반짝이는 빛 스윕 */
+.launch-btn-inner::after {
+  content:''; position:absolute;
+  top:-50%;left:-80%;width:60%;height:200%;
+  background: linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  transform: skewX(-20deg);
+  transition: left .6s ease;
+}
+.launch-btn:hover .launch-btn-inner::after { left:130%; }
+
+.launch-icon {
+  font-size: 2.4rem; display: block;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 0 12px rgba(232,201,106,.7));
+  animation: float-icon 3s ease-in-out infinite;
+}
+@keyframes float-icon {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.launch-main-text {
+  display: block; font-size: 1.1rem; font-weight: 700;
+  letter-spacing: .12em;
+  background: linear-gradient(135deg,#f7e199,#e8c96a,#c9a84c);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 6px;
+}
+.launch-sub-text {
+  display: block; font-size: .75rem;
+  color: rgba(255,255,255,.6); letter-spacing: .1em;
+  line-height: 1.6;
+}
+.launch-done-text {
+  display: block; font-size: .82rem;
+  color: var(--gold); letter-spacing: .08em;
+  margin-top: 10px; min-height: 1.2em;
 }
 
-/* ── 하단 기도 마무리 ─────────────────────── */
-.footer-prayer {
-  text-align: center; margin-top: 50px;
-  padding-top: 30px;
-  border-top: 1px solid rgba(224,188,90,0.22);
-  font-size: clamp(0.85rem, 2.1vw, 0.98rem);
-  font-style: italic; font-weight: 300;
-  color: rgba(255,255,255,0.72); line-height: 1.9;
-  letter-spacing: 0.04em;
+/* ── 공유 버튼 ── */
+.share-row {
+  display:flex; gap:10px; justify-content:center;
+  margin-top:16px; flex-wrap:wrap;
 }
-.footer-prayer strong {
-  display: block; font-weight: 700; font-style: normal;
-  color: var(--gold); letter-spacing: 0.2em;
-  font-size: 0.68rem; margin-bottom: 9px; text-transform: uppercase;
+.share-btn {
+  display:inline-flex;align-items:center;gap:7px;
+  border:none;border-radius:40px;padding:11px 22px;
+  font-family:inherit;font-size:.84rem;font-weight:700;
+  letter-spacing:.06em;cursor:pointer;
+  transition:transform .18s,box-shadow .18s;
+}
+.share-btn:hover{transform:translateY(-2px);}
+.share-btn.kakao{background:#FEE500;color:#3A1D1D;box-shadow:0 4px 16px rgba(254,229,0,.35);}
+.share-btn.link{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);}
+
+/* ══════════════════════════════
+   우주 발사 의식 오버레이
+══════════════════════════════ */
+.ritual-overlay {
+  position: fixed; inset: 0; z-index: 800;
+  background: radial-gradient(ellipse 120% 120% at 50% 50%,
+    #1a0535 0%,#0a0018 40%,#000 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 30px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .5s ease;
+}
+.ritual-overlay.active { opacity: 1; pointer-events: all; }
+
+#ritual-canvas {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+}
+.ritual-content { position: relative; z-index: 1; }
+
+.ritual-phase-text {
+  font-size: clamp(1.2rem,4vw,1.8rem);
+  font-weight: 700; letter-spacing: .06em;
+  color: #fff; line-height: 1.5;
+  margin-bottom: 12px;
+  text-shadow: 0 0 30px rgba(232,201,106,.6);
+}
+.ritual-affirm {
+  font-style: italic; font-size: clamp(.88rem,2.5vw,1.05rem);
+  color: var(--gold); line-height: 1.7;
+  max-width: 420px; margin: 0 auto 28px;
+  opacity: .9;
+}
+.ritual-progress {
+  width: 200px; height: 3px;
+  background: rgba(255,255,255,.1);
+  border-radius: 2px; margin: 0 auto;
+  overflow: hidden;
+}
+.ritual-progress-bar {
+  height: 100%; width: 0%; border-radius: 2px;
+  background: linear-gradient(90deg,var(--purple),var(--gold));
+  transition: width .4s ease;
+  box-shadow: 0 0 10px var(--gold);
 }
 
-/* ── 애니메이션 ──────────────────────────── */
-@keyframes float-up {
-  0%   { transform: translateY(0) scale(1); opacity: 0.85; }
-  100% { transform: translateY(-90px) scale(0.2); opacity: 0; }
+/* ══════════════════════════════
+   기도 기록
+══════════════════════════════ */
+.history-section {
+  margin-top:32px;
+  border:1px solid rgba(232,201,106,.22);
+  border-radius:var(--radius); overflow:hidden;
 }
-@keyframes halo-pulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
-  50%      { box-shadow: 0 0 0 18px rgba(201,168,76,0.1); }
+.history-hd {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:15px 20px; background:rgba(255,255,255,.04);
+  cursor:pointer; transition:background .2s;
 }
-@keyframes badge-pop {
-  0%  { transform: scale(0.7); opacity: 0; }
-  70% { transform: scale(1.12); }
-  100%{ transform: scale(1); opacity: 1; }
+.history-hd:hover{ background:rgba(255,255,255,.08); }
+#history-list{ padding:6px 16px 16px; }
+.h-item {
+  border-bottom:1px solid rgba(232,201,106,.1);
+  padding:13px 6px;
 }
-.prayer-card.halo-anim { animation: halo-pulse 1.2s ease 0s 2; }
-.badge-pop { animation: badge-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.h-item:last-child{border-bottom:none;}
+.h-date{font-size:.77rem;color:var(--gold);font-weight:700;letter-spacing:.07em;margin-bottom:5px;}
+.h-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;}
+.h-tag{font-size:.69rem;padding:3px 10px;border-radius:20px;border:1px solid rgba(232,201,106,.22);color:rgba(255,255,255,.65);}
+.h-tag.done{border-color:var(--gold);color:var(--gold2);}
+.h-wish{font-size:.77rem;color:rgba(255,255,255,.6);font-style:italic;line-height:1.6;padding-left:10px;border-left:2px solid rgba(232,201,106,.28);}
+.h-empty{text-align:center;padding:26px 0;color:rgba(255,255,255,.3);font-size:.8rem;}
 
-.particle {
-  position: fixed; pointer-events: none; z-index: 999;
-  font-size: 1.05rem;
-  animation: float-up 1.6s ease-out forwards;
+/* ══════════════════════════════
+   음악 바
+══════════════════════════════ */
+.music-bar {
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(10,12,28,.93);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid rgba(232,201,106,.18);
+  padding:9px 18px 12px;
+  display:flex;align-items:center;gap:12px;
+}
+.m-toggle {
+  width:38px;height:38px;border-radius:50%;
+  border:1.5px solid rgba(232,201,106,.5);
+  background:rgba(232,201,106,.1);
+  color:var(--gold2);font-size:1rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .22s;flex-shrink:0;
+}
+.m-toggle:hover{background:rgba(232,201,106,.22);}
+.m-toggle.playing{border-color:var(--gold);box-shadow:0 0 14px rgba(232,201,106,.35);}
+.m-info{flex:1;min-width:0;}
+.m-title{font-size:.73rem;color:var(--gold);letter-spacing:.09em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.m-sub{font-size:.65rem;color:rgba(255,255,255,.5);letter-spacing:.05em;margin-top:2px;}
+.m-wave{display:flex;align-items:center;gap:3px;height:20px;flex-shrink:0;}
+.m-wave span{display:block;width:3px;background:var(--gold);border-radius:2px;opacity:.65;}
+.m-wave span:nth-child(1){height:6px;}
+.m-wave span:nth-child(2){height:14px;}
+.m-wave span:nth-child(3){height:10px;}
+.m-wave span:nth-child(4){height:18px;}
+.m-wave span:nth-child(5){height:8px;}
+@keyframes w1{0%,100%{height:6px}50%{height:16px}}
+@keyframes w2{0%,100%{height:14px}50%{height:4px}}
+@keyframes w3{0%,100%{height:10px}50%{height:20px}}
+@keyframes w4{0%,100%{height:18px}50%{height:6px}}
+@keyframes w5{0%,100%{height:8px}50%{height:14px}}
+.m-wave.playing span:nth-child(1){animation:w1 1.1s ease-in-out infinite;}
+.m-wave.playing span:nth-child(2){animation:w2 .9s ease-in-out infinite;}
+.m-wave.playing span:nth-child(3){animation:w3 1.3s ease-in-out infinite;}
+.m-wave.playing span:nth-child(4){animation:w4 .8s ease-in-out infinite;}
+.m-wave.playing span:nth-child(5){animation:w5 1.0s ease-in-out infinite;}
+.m-vol{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.m-vol-icon{font-size:.82rem;color:rgba(255,255,255,.4);}
+input[type=range].vol{-webkit-appearance:none;width:64px;height:3px;background:rgba(255,255,255,.14);border-radius:2px;outline:none;cursor:pointer;}
+input[type=range].vol::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px rgba(232,201,106,.5);}
+
+/* ══════════════════════════════
+   공유 바텀시트
+══════════════════════════════ */
+.sheet-bg{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;animation:sbg .25s ease;}
+@keyframes sbg{from{opacity:0}to{opacity:1}}
+.sheet-body{width:100%;max-width:520px;margin:0 auto;background:#16193a;border-top:1px solid rgba(232,201,106,.3);border-radius:22px 22px 0 0;padding:13px 18px 34px;animation:sslide .3s cubic-bezier(.32,.72,0,1);}
+@keyframes sslide{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:38px;height:4px;border-radius:3px;background:rgba(255,255,255,.18);margin:0 auto 16px;}
+.sheet-title{text-align:center;font-size:.92rem;font-weight:700;color:var(--gold);letter-spacing:.08em;margin-bottom:8px;}
+.sheet-desc{text-align:center;font-size:.73rem;color:rgba(255,255,255,.45);line-height:1.55;margin-bottom:18px;white-space:pre-line;}
+.sheet-btns{display:flex;flex-direction:column;gap:9px;margin-bottom:12px;}
+.ssbtn{display:flex;align-items:center;gap:13px;width:100%;padding:14px 17px;border:none;border-radius:13px;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.ssbtn:active{opacity:.75;}
+.ssbtn .ssicon{font-size:1.25rem;}
+.ssbtn.kakao{background:#FEE500;color:#3A1D1D;}
+.ssbtn.cp-text{background:rgba(255,255,255,.09);color:#fff;border:1px solid rgba(255,255,255,.13);}
+.ssbtn.cp-link{background:rgba(255,255,255,.05);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.08);}
+.sheet-cancel{width:100%;padding:13px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:13px;color:rgba(255,255,255,.55);font-family:inherit;font-size:.86rem;cursor:pointer;}
+
+/* ══════════════════════════════
+   토스트
+══════════════════════════════ */
+.toast{
+  position:fixed;bottom:88px;left:50%;transform:translateX(-50%);
+  background:rgba(20,24,50,.96);border:1px solid var(--gold);
+  color:var(--gold2);border-radius:30px;padding:9px 22px;
+  font-size:.8rem;letter-spacing:.07em;z-index:600;
+  pointer-events:none;white-space:nowrap;
+  animation:tin .3s ease,tout .4s ease 2s forwards;
+}
+@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes tout{to{opacity:0;transform:translateX(-50%) translateY(8px)}}
+
+/* ══════════════════════════════
+   파티클
+══════════════════════════════ */
+.particle{
+  position:fixed;pointer-events:none;z-index:999;
+  font-size:1.1rem;
+  animation:fup 1.6s ease-out forwards;
+}
+@keyframes fup{0%{transform:translateY(0) scale(1);opacity:.9}100%{transform:translateY(-100px) scale(.2);opacity:0}}
+
+/* ══════════════════════════════
+   하단 기도 마무리
+══════════════════════════════ */
+.footer-prayer{
+  text-align:center;margin-top:48px;padding-top:28px;
+  border-top:1px solid rgba(232,201,106,.12);
+  font-size:clamp(.82rem,2vw,.95rem);
+  font-style:italic;font-weight:300;
+  color:rgba(255,255,255,.55);line-height:1.9;
+}
+.footer-prayer strong{
+  display:block;font-weight:700;font-style:normal;
+  color:var(--gold);letter-spacing:.2em;
+  font-size:.67rem;margin-bottom:8px;text-transform:uppercase;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<canvas id="stars-canvas"></canvas>
+<!-- 배경 캔버스 -->
+<canvas id="bg-canvas"></canvas>
 
-<!-- ── 첫 접속 오버레이 ── -->
-<div class="intro-overlay" id="intro-overlay">
-  <div class="intro-cross">✝</div>
+<!-- 우주 발사 의식 오버레이 -->
+<div class="ritual-overlay" id="ritual-overlay">
+  <canvas id="ritual-canvas"></canvas>
+  <div class="ritual-content">
+    <div class="ritual-phase-text" id="ritual-phase"></div>
+    <div class="ritual-affirm" id="ritual-affirm"></div>
+    <div class="ritual-progress"><div class="ritual-progress-bar" id="ritual-bar"></div></div>
+  </div>
+</div>
+
+<!-- 공유 바텀시트 -->
+<div id="sheet" class="sheet-bg" style="display:none" onclick="closeSheet()">
+  <div class="sheet-body" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <p class="sheet-title">✝ 오늘의 기도 공유하기</p>
+    <p class="sheet-desc" id="sheet-desc"></p>
+    <div class="sheet-btns">
+      <button class="ssbtn kakao" onclick="doShareKakao()"><span class="ssicon">💬</span><span>카카오톡으로 공유</span></button>
+      <button class="ssbtn cp-text" onclick="doShareCopy('text')"><span class="ssicon">📋</span><span>기도 내용 복사</span></button>
+      <button class="ssbtn cp-link" onclick="doShareCopy('link')"><span class="ssicon">🔗</span><span>링크만 복사</span></button>
+    </div>
+    <button class="sheet-cancel" onclick="closeSheet()">취소</button>
+  </div>
+</div>
+
+<!-- 인트로 오버레이 -->
+<div class="intro" id="intro">
+  <div class="intro-sigil">✦</div>
   <div class="intro-title">우리 가족의 기도</div>
-  <div class="intro-sub">
-    이미 이루어졌습니다<br>
-    <span style="font-size:0.75rem; letter-spacing:0.14em;">Gratias agimus tibi</span>
-  </div>
-  <button class="intro-btn" onclick="enterSite()">🙏&nbsp; 기도 시작하기</button>
-  <div style="font-size:0.68rem; color:rgba(255,255,255,0.25); letter-spacing:0.1em; margin-top:4px;">
-    ♩ 성가 음악과 함께 시작됩니다
-  </div>
+  <div class="intro-latin">Gratias agimus tibi · 이미 이루어졌습니다</div>
+  <button class="intro-btn" onclick="enterSite()">🙏 &nbsp;기도 시작하기</button>
+  <div class="intro-note">♩ 성가 음악과 함께 시작됩니다</div>
 </div>
 
-<!-- ── 음악 플레이어 바 ── -->
+<!-- 음악 바 -->
 <div class="music-bar">
-  <button class="music-toggle" id="music-toggle" onclick="toggleMusic()" title="음악 재생/정지">
-    <span id="music-btn-icon">▶</span>
-  </button>
-  <div class="music-info">
-    <div class="music-title" id="music-title">♩ 파이프 오르간 성가 — Ave Maria</div>
-    <div class="music-sub">우리 가족의 기도를 위한 묵상 음악</div>
+  <button class="m-toggle" id="m-toggle" onclick="toggleMusic()"><span id="m-icon">▶</span></button>
+  <div class="m-info">
+    <div class="m-title">♩ 파이프 오르간 성가 — Ave Maria</div>
+    <div class="m-sub">우리 가족의 기도를 위한 묵상 음악</div>
   </div>
-  <div class="music-wave" id="music-wave">
-    <span></span><span></span><span></span><span></span><span></span>
-  </div>
-  <div class="vol-wrap">
-    <span class="vol-icon">🔊</span>
-    <input type="range" class="vol-slider" id="vol-slider"
-           min="0" max="1" step="0.05" value="0.45"
-           oninput="setVolume(this.value)">
+  <div class="m-wave" id="m-wave"><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="m-vol">
+    <span class="m-vol-icon">🔊</span>
+    <input type="range" class="vol" id="vol" min="0" max="1" step="0.05" value="0.45" oninput="setVol(this.value)">
   </div>
 </div>
 
-<div class="page-wrap">
+<div class="page">
 
-  <!-- ── 헤더 ── -->
   <header>
-    <div class="cross-icon">✝&nbsp;&nbsp;✦&nbsp;&nbsp;✝</div>
-    <h1 class="site-title">우리 가족의 기도</h1>
-    <p class="site-subtitle">이미 이루어졌습니다 &nbsp;·&nbsp; Gratias agimus tibi</p>
+    <div class="hdr-cross">✝ &nbsp;✦&nbsp; ✝</div>
+    <h1 class="hdr-title">우리 가족의 기도</h1>
+    <p class="hdr-sub">이미 이루어졌습니다 · Gratias agimus tibi</p>
   </header>
 
-  <!-- ── 날짜 배너 ── -->
   <div class="date-banner">
-    <span class="today-date" id="today-date"></span>
-    <p class="daily-blessing" id="daily-blessing"></p>
-    <span class="completion-badge" id="completion-badge">
-      <span class="stamp">☆</span>
-      <span id="badge-text">아직 오늘의 기도를 완료하지 않았어요</span>
-    </span>
+    <div class="date-top" id="today-date"></div>
+    <div class="date-blessing" id="daily-blessing"></div>
+    <span class="badge" id="badge"><span id="badge-stamp">☆</span>&nbsp;<span id="badge-txt">아직 오늘의 기도를 완료하지 않았어요</span></span>
   </div>
 
-  <p class="section-label">오늘의 지향 &nbsp;—&nbsp; Today's Intentions</p>
+  <p class="sec-label">오늘의 지향 — Today's Intentions</p>
 
-  <div class="cards-grid">
+  <div class="grid">
 
     <!-- 재물 -->
-    <div class="prayer-card card-wealth" id="card-wealth" onclick="toggleCard('wealth')">
-      <div class="card-header">
-        <div class="card-icon icon-wealth">💛</div>
-        <div>
-          <div class="card-category">Wealth</div>
-          <div class="card-title">재물과 풍요</div>
-        </div>
+    <div class="card c-wealth" id="card-wealth" onclick="toggleCard('wealth')">
+      <div class="card-hd">
+        <div class="card-icon ic-wealth">💛</div>
+        <div><div class="card-cat">Wealth</div><div class="card-name">재물과 풍요</div></div>
       </div>
-      <p class="card-prayer">
-        주님, 저희 가정에 풍요의 문을 열어 주시고 모든 필요를 채워 주심에 이미 감사드립니다. 받은 것을 나누는 지혜로운 청지기가 되게 하소서.
-      </p>
-      <p class="card-affirmation">
-        "우리 가정에는 이미 넘치는 풍요가 흐릅니다.<br>감사합니다. 감사합니다. 감사합니다."
-      </p>
-      <div class="card-check">
-        <span class="check-circle" id="check-wealth">✓</span>
-        <span id="check-wealth-text">탭하여 기도 완료 표시</span>
-      </div>
+      <p class="card-prayer">주님, 저희 가정에 풍요의 문을 열어 주시고 모든 필요를 채워 주심에 이미 감사드립니다. 받은 것을 나누는 지혜로운 청지기가 되게 하소서.</p>
+      <p class="card-affirm">"우리 가정에는 이미 넘치는 풍요가 흐릅니다.<br>감사합니다. 감사합니다. 감사합니다."</p>
+      <div class="card-ck"><span class="ck-circle" id="ck-wealth">✓</span><span id="ckt-wealth">탭하여 기도 완료 표시</span></div>
     </div>
 
     <!-- 가족 -->
-    <div class="prayer-card card-family" id="card-family" onclick="toggleCard('family')">
-      <div class="card-header">
-        <div class="card-icon icon-family">🤍</div>
-        <div>
-          <div class="card-category">Family</div>
-          <div class="card-title">가족 화목</div>
-        </div>
+    <div class="card c-family" id="card-family" onclick="toggleCard('family')">
+      <div class="card-hd">
+        <div class="card-icon ic-family">🤍</div>
+        <div><div class="card-cat">Family</div><div class="card-name">가족 화목</div></div>
       </div>
-      <p class="card-prayer">
-        주님, 저희 가족 한 사람 한 사람을 당신의 사랑으로 감싸 주소서. 서로를 이해하고 축복하는 아름다운 가정이 되게 하심에 감사드립니다.
-      </p>
-      <p class="card-affirmation">
-        "우리 가족은 사랑 안에서 하나이며,<br>서로의 존재가 서로에게 선물입니다."
-      </p>
-      <div class="card-check">
-        <span class="check-circle" id="check-family">✓</span>
-        <span id="check-family-text">탭하여 기도 완료 표시</span>
-      </div>
+      <p class="card-prayer">주님, 저희 가족 한 사람 한 사람을 당신의 사랑으로 감싸 주소서. 서로를 이해하고 축복하는 아름다운 가정이 되게 하심에 감사드립니다.</p>
+      <p class="card-affirm">"우리 가족은 사랑 안에서 하나이며,<br>서로의 존재가 서로에게 선물입니다."</p>
+      <div class="card-ck"><span class="ck-circle" id="ck-family">✓</span><span id="ckt-family">탭하여 기도 완료 표시</span></div>
     </div>
 
     <!-- 건강 -->
-    <div class="prayer-card card-health" id="card-health" onclick="toggleCard('health')">
-      <div class="card-header">
-        <div class="card-icon icon-health">💚</div>
-        <div>
-          <div class="card-category">Health</div>
-          <div class="card-title">건강과 치유</div>
-        </div>
+    <div class="card c-health" id="card-health" onclick="toggleCard('health')">
+      <div class="card-hd">
+        <div class="card-icon ic-health">💚</div>
+        <div><div class="card-cat">Health</div><div class="card-name">건강과 치유</div></div>
       </div>
-      <p class="card-prayer">
-        주님, 저희의 몸과 마음에 당신의 치유의 빛을 내려 주소서. 모든 세포가 생명으로 충만하고, 정신이 평화로 가득함에 감사드립니다.
-      </p>
-      <p class="card-affirmation">
-        "우리 몸은 이미 빛과 활력으로 넘칩니다.<br>하느님의 치유가 지금 이 순간도 임합니다."
-      </p>
-      <div class="card-check">
-        <span class="check-circle" id="check-health">✓</span>
-        <span id="check-health-text">탭하여 기도 완료 표시</span>
-      </div>
+      <p class="card-prayer">주님, 저희의 몸과 마음에 당신의 치유의 빛을 내려 주소서. 모든 세포가 생명으로 충만하고, 정신이 평화로 가득함에 감사드립니다.</p>
+      <p class="card-affirm">"우리 몸은 이미 빛과 활력으로 넘칩니다.<br>하느님의 치유가 지금 이 순간도 임합니다."</p>
+      <div class="card-ck"><span class="ck-circle" id="ck-health">✓</span><span id="ckt-health">탭하여 기도 완료 표시</span></div>
     </div>
 
     <!-- 소망 -->
-    <div class="prayer-card card-wish card-full" id="card-wish" onclick="handleWishCardClick(event)">
-      <div class="card-header">
-        <div class="card-icon icon-wish">🌸</div>
-        <div>
-          <div class="card-category">Special Intention</div>
-          <div class="card-title">특별 소망</div>
-        </div>
+    <div class="card c-wish card-full" id="card-wish" onclick="handleWishClick(event)">
+      <div class="card-hd">
+        <div class="card-icon ic-wish">🌸</div>
+        <div><div class="card-cat">Special Intention</div><div class="card-name">특별 소망</div></div>
       </div>
-      <div class="wish-input-wrap">
-        <textarea
-          id="wish-text"
+      <div class="wish-wrap">
+        <textarea id="wish-text"
           placeholder="오늘 특별히 주님께 맡기고 싶은 소망을 적어 주세요. 이미 이루어졌다고 믿으며 감사의 마음으로 써 내려가세요…"
-          rows="3"
-          onclick="event.stopPropagation()"
-          oninput="saveWish()"
-        ></textarea>
+          rows="3" onclick="event.stopPropagation()" oninput="saveWish()"></textarea>
       </div>
-      <p class="card-affirmation" id="wish-affirmation" style="display:none"></p>
-      <div class="card-check">
-        <span class="check-circle" id="check-wish">✓</span>
-        <span id="check-wish-text">탭하여 기도 완료 표시</span>
-      </div>
+      <p class="card-affirm" id="wish-affirm" style="display:none"></p>
+      <div class="card-ck"><span class="ck-circle" id="ck-wish">✓</span><span id="ckt-wish">탭하여 기도 완료 표시</span></div>
     </div>
 
+  </div><!-- /grid -->
+
+  <!-- 우주 발사 버튼 -->
+  <div class="launch-section">
+    <button class="launch-btn" id="launch-btn" onclick="launchPrayer()">
+      <div class="launch-btn-inner" id="launch-inner">
+        <span class="launch-icon" id="launch-icon">🚀</span>
+        <span class="launch-main-text" id="launch-main">소원을 우주로 발사하기</span>
+        <span class="launch-sub-text" id="launch-sub">기도가 완료되면 우주의 에너지가 응답합니다</span>
+        <span class="launch-done-text" id="launch-done"></span>
+      </div>
+    </button>
+
+    <div class="share-row" id="share-row" style="display:none">
+      <button class="share-btn kakao" onclick="shareKakao(this)">💬 카카오톡 공유</button>
+      <button class="share-btn link" onclick="copyLink(this)">🔗 링크 복사</button>
+    </div>
   </div>
 
-  <!-- ── 완료 버튼 ── -->
-  <div class="complete-section">
-    <button class="complete-btn" id="complete-btn" onclick="completeAllPrayer()">
-      <span class="btn-icon">🙏</span>
-      <span id="btn-label">오늘의 기도 바치기</span>
-    </button>
-    <p class="complete-done-msg" id="complete-done-msg"></p>
+  <!-- 기도 기록 -->
+  <div class="history-section">
+    <div class="history-hd" onclick="toggleHistory()">
+      <span class="sec-label" style="margin:0">📖 기도 기록 보기</span>
+      <span id="h-icon" style="color:var(--gold);font-size:.8rem">▼</span>
+    </div>
+    <div id="h-body" style="display:none">
+      <div id="history-list"></div>
+    </div>
   </div>
 
   <div class="footer-prayer">
-    <strong>Amen &nbsp;·&nbsp; 아멘</strong>
+    <strong>Amen · 아멘</strong>
     주님의 뜻이 하늘에서와 같이 땅에서도 이루어지소서.<br>
     우리가 구하는 것은 이미 이루어졌습니다.<br>
     <em>감사합니다. 감사합니다. 감사합니다.</em>
   </div>
 
-</div>
+</div><!-- /page -->
 
 <script>
-/* ════════════════════════════════════════════════
-   오르간 성가 음악 엔진 (Web Audio API)
-   Ave Maria 풍 파이프 오르간 합성
-════════════════════════════════════════════════ */
-let audioCtx = null;
-let masterGain = null;
-let reverbNode = null;
-let isPlaying = false;
-let scheduleTimer = null;
-let nextNoteTime = 0;
-let currentVolume = 0.45;
-let noteIndex = 0;
+/* ════════════════════════════════════
+   별빛 + 에너지 흐름 배경 캔버스
+════════════════════════════════════ */
+function initBgCanvas() {
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  let W, H, stars = [], flows = [];
 
-/* ── 오르간 음색 생성 (파이프 오르간 하모닉스) ── */
-function createOrganOscillator(freq, startTime, duration, gainVal) {
-  if (!audioCtx) return;
-  const g = audioCtx.createGain();
-  g.connect(reverbNode || masterGain);
-
-  // 파이프 오르간 = 기본파 + 옥타브 + 5도 + 2옥타브 중첩
-  const harmonics = [
-    { mult: 1,    amp: 1.0  },
-    { mult: 2,    amp: 0.55 },
-    { mult: 3,    amp: 0.28 },
-    { mult: 4,    amp: 0.18 },
-    { mult: 6,    amp: 0.10 },
-    { mult: 8,    amp: 0.06 },
-  ];
-
-  harmonics.forEach(h => {
-    const osc = audioCtx.createOscillator();
-    const hg  = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq * h.mult, startTime);
-    hg.gain.setValueAtTime(gainVal * h.amp * 0.22, startTime);
-    // 느린 어택 (오르간 특성)
-    hg.gain.linearRampToValueAtTime(gainVal * h.amp * 0.22, startTime + 0.08);
-    // 릴리즈
-    hg.gain.setValueAtTime(gainVal * h.amp * 0.22, startTime + duration - 0.12);
-    hg.gain.linearRampToValueAtTime(0, startTime + duration);
-    osc.connect(hg);
-    hg.connect(g);
-    osc.start(startTime);
-    osc.stop(startTime + duration + 0.05);
-  });
-
-  g.gain.setValueAtTime(1, startTime);
-}
-
-/* ── 리버브 (공간감 / 성당 울림) ── */
-function createReverb(ctx) {
-  const convolver = ctx.createConvolver();
-  const sampleRate = ctx.sampleRate;
-  const length = sampleRate * 3.2; // 3.2초 잔향
-  const impulse = ctx.createBuffer(2, length, sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const data = impulse.getChannelData(ch);
-    for (let i = 0; i < length; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.2);
-    }
+  function resize() {
+    W = c.width = window.innerWidth;
+    H = c.height = window.innerHeight;
+    stars = Array.from({length:200}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      r: Math.random()*1.3+0.15,
+      sp: 0.003+Math.random()*.007,
+      ph: Math.random()*Math.PI*2,
+      hue: Math.random() < .8 ? 45 : Math.random()*60+260,
+    }));
+    flows = Array.from({length:12}, () => newFlow());
   }
-  convolver.buffer = impulse;
-  convolver.connect(masterGain);
-  return convolver;
-}
 
-/* ── Ave Maria 풍 멜로디 시퀀스 ── */
-// 음계: C4=261.63 D4=293.66 E4=329.63 F4=349.23 G4=392 A4=440 B4=493.88
-// Ab4=415.30, Bb4=466.16, Eb4=311.13, F#4=369.99
-const C3=130.81, D3=146.83, E3=164.81, F3=174.61, G3=196, A3=220, B3=246.94;
-const C4=261.63, D4=293.66, E4=329.63, F4=349.23, G4=392, A4=440, B4=493.88;
-const Ab4=415.30, Bb4=466.16, Eb4=311.13, Db4=277.18, Gb4=369.99;
-const C5=523.25, D5=587.33, E5=659.25, F5=698.46, G5=784;
-const Ab3=207.65, Bb3=233.08;
+  function newFlow() {
+    return {
+      x: Math.random()*W, y: Math.random()*H,
+      vx: (Math.random()-.5)*.4, vy: (Math.random()-.5)*.4,
+      life: 0, maxLife: 120+Math.random()*180,
+      r: 1+Math.random()*2,
+      hue: Math.random()<.6 ? 45 : 280,
+    };
+  }
 
-// [주선율, 베이스, 내성] 형태의 화음 진행, [duration_beats]
-// Ave Maria (Bach/Gounod) 스타일 + 후반 독자 선율
-const SEQUENCE = [
-  // 인트로 아르페지오
-  { notes:[C4,E4,G4], bass:C3, dur:1.8 },
-  { notes:[D4,F4,A4], bass:D3, dur:1.8 },
-  { notes:[E4,G4,C5], bass:C3, dur:1.8 },
-  { notes:[F4,A4,C5], bass:F3, dur:1.8 },
-  // Ave Maria 주제부
-  { notes:[G4,B4,D5], bass:G3, dur:2.2 },
-  { notes:[A4,C5,E5], bass:A3, dur:1.6 },
-  { notes:[G4,B4,D5], bass:G3, dur:1.6 },
-  { notes:[F4,A4,C5], bass:F3, dur:2.2 },
-  { notes:[E4,G4,C5], bass:C3, dur:1.6 },
-  { notes:[D4,F4,A4], bass:D3, dur:1.6 },
-  { notes:[C4,E4,G4], bass:C3, dur:2.4 },
-  // 중간부 (서정)
-  { notes:[E4,Ab4,C5], bass:A3, dur:2.0 },
-  { notes:[F4,A4,C5],  bass:F3, dur:1.8 },
-  { notes:[G4,Bb4,D5], bass:G3, dur:1.8 },
-  { notes:[Ab4,C5,Eb4+392], bass:Ab3, dur:2.2 },
-  { notes:[G4,B4,D5],  bass:G3, dur:1.6 },
-  { notes:[F4,A4,C5],  bass:F3, dur:1.6 },
-  // 클라이맥스
-  { notes:[E5,C5,G4],  bass:C3, dur:2.4 },
-  { notes:[D5,B4,G4],  bass:G3, dur:1.8 },
-  { notes:[C5,A4,F4],  bass:F3, dur:1.8 },
-  { notes:[B4,G4,D4],  bass:G3, dur:2.0 },
-  { notes:[C5,E4,G4],  bass:C3, dur:2.8 },
-  // 아멘 코다
-  { notes:[F4,A4,C5],  bass:F3, dur:2.0 },
-  { notes:[G4,B4,D5],  bass:G3, dur:2.0 },
-  { notes:[C4,E4,G4],  bass:C3, dur:3.2 },
-];
+  function draw(t) {
+    ctx.clearRect(0,0,W,H);
 
-const BEAT_SEC = 1.05; // 템포 (느린 성가 풍)
-
-function scheduleNotes() {
-  if (!isPlaying || !audioCtx) return;
-
-  while (nextNoteTime < audioCtx.currentTime + 0.5) {
-    const step = SEQUENCE[noteIndex % SEQUENCE.length];
-    const dur = step.dur * BEAT_SEC;
-    const t = nextNoteTime;
-
-    // 베이스
-    createOrganOscillator(step.bass, t, dur, 0.75);
-
-    // 화음 음표들 (살짝 시간차로 아르페지오 느낌)
-    step.notes.forEach((freq, i) => {
-      createOrganOscillator(freq, t + i * 0.045, dur - i * 0.04, 0.55 - i * 0.08);
+    // 별
+    stars.forEach(s => {
+      const a = .15 + .6*Math.abs(Math.sin(t*.001*s.sp*1000+s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `hsla(${s.hue},80%,85%,${a})`;
+      ctx.fill();
     });
 
-    nextNoteTime += dur;
-    noteIndex++;
+    // 에너지 흐름 파티클
+    flows.forEach((f,i) => {
+      f.x += f.vx; f.y += f.vy; f.life++;
+      if (f.life > f.maxLife) flows[i] = newFlow();
+      const a = Math.sin(f.life/f.maxLife*Math.PI)*.55;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+      ctx.fillStyle = `hsla(${f.hue},90%,75%,${a})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
   }
-  scheduleTimer = setTimeout(scheduleNotes, 200);
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(draw);
+}
+
+/* ════════════════════════════════════
+   의식 오버레이 캔버스 (발사 시 폭발)
+════════════════════════════════════ */
+let ritualCtx, ritualW, ritualH, ritualParticles = [], ritualRunning = false;
+
+function initRitualCanvas() {
+  const c = document.getElementById('ritual-canvas');
+  ritualCtx = c.getContext('2d');
+  function resize() {
+    ritualW = c.width = window.innerWidth;
+    ritualH = c.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+}
+
+function spawnRitualParticle() {
+  const hues = [45,50,280,300,320,0];
+  const h = hues[Math.floor(Math.random()*hues.length)];
+  ritualParticles.push({
+    x: ritualW/2 + (Math.random()-.5)*ritualW*.6,
+    y: ritualH/2 + (Math.random()-.5)*ritualH*.6,
+    vx: (Math.random()-.5)*3,
+    vy: -Math.random()*4-1,
+    life: 0, maxLife: 60+Math.random()*80,
+    r: 1+Math.random()*3, hue: h,
+    sym: ['✦','✧','⋆','·','✝','○'][Math.floor(Math.random()*6)],
+    text: Math.random() < .15,
+  });
+}
+
+function drawRitual() {
+  if (!ritualRunning) return;
+  ritualCtx.clearRect(0,0,ritualW,ritualH);
+
+  // 중앙 빛 소용돌이
+  const grad = ritualCtx.createRadialGradient(ritualW/2,ritualH/2,0,ritualW/2,ritualH/2,300);
+  grad.addColorStop(0,'rgba(180,120,255,0.18)');
+  grad.addColorStop(.5,'rgba(232,201,106,0.08)');
+  grad.addColorStop(1,'transparent');
+  ritualCtx.fillStyle = grad;
+  ritualCtx.fillRect(0,0,ritualW,ritualH);
+
+  // 파티클
+  for (let i = ritualParticles.length-1; i >= 0; i--) {
+    const p = ritualParticles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += .04; p.life++;
+    if (p.life > p.maxLife) { ritualParticles.splice(i,1); continue; }
+    const a = Math.sin(p.life/p.maxLife*Math.PI);
+    if (p.text) {
+      ritualCtx.font = `${p.r*6}px serif`;
+      ritualCtx.fillStyle = `hsla(${p.hue},90%,80%,${a*.8})`;
+      ritualCtx.fillText(p.sym, p.x, p.y);
+    } else {
+      ritualCtx.beginPath();
+      ritualCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ritualCtx.fillStyle = `hsla(${p.hue},90%,80%,${a})`;
+      ritualCtx.fill();
+    }
+  }
+
+  if (Math.random() < .6) spawnRitualParticle();
+  requestAnimationFrame(drawRitual);
+}
+
+/* ════════════════════════════════════
+   오르간 음악 엔진
+════════════════════════════════════ */
+let audioCtx=null, masterGain=null, reverbNode=null;
+let isPlaying=false, schedTimer=null, nextNote=0, noteIdx=0, curVol=0.45;
+
+const C3=130.81,D3=146.83,E3=164.81,F3=174.61,G3=196,A3=220,B3=246.94;
+const C4=261.63,D4=293.66,E4=329.63,F4=349.23,G4=392,A4=440,B4=493.88;
+const Ab4=415.30,Bb4=466.16,Db4=277.18,C5=523.25,D5=587.33,E5=659.25,Ab3=207.65;
+
+const SEQ=[
+  {notes:[C4,E4,G4],bass:C3,dur:1.8},{notes:[D4,F4,A4],bass:D3,dur:1.8},
+  {notes:[E4,G4,C5],bass:C3,dur:1.8},{notes:[F4,A4,C5],bass:F3,dur:1.8},
+  {notes:[G4,B4,D5],bass:G3,dur:2.2},{notes:[A4,C5,E5],bass:A3,dur:1.6},
+  {notes:[G4,B4,D5],bass:G3,dur:1.6},{notes:[F4,A4,C5],bass:F3,dur:2.2},
+  {notes:[E4,G4,C5],bass:C3,dur:1.6},{notes:[D4,F4,A4],bass:D3,dur:1.6},
+  {notes:[C4,E4,G4],bass:C3,dur:2.4},{notes:[E4,Ab4,C5],bass:A3,dur:2.0},
+  {notes:[F4,A4,C5],bass:F3,dur:1.8},{notes:[G4,Bb4,D5],bass:G3,dur:1.8},
+  {notes:[Ab4,C5,E5],bass:Ab3,dur:2.2},{notes:[G4,B4,D5],bass:G3,dur:1.6},
+  {notes:[E5,C5,G4],bass:C3,dur:2.4},{notes:[D5,B4,G4],bass:G3,dur:1.8},
+  {notes:[C5,A4,F4],bass:F3,dur:1.8},{notes:[B4,G4,D4],bass:G3,dur:2.0},
+  {notes:[C5,E4,G4],bass:C3,dur:2.8},{notes:[F4,A4,C5],bass:F3,dur:2.0},
+  {notes:[G4,B4,D5],bass:G3,dur:2.0},{notes:[C4,E4,G4],bass:C3,dur:3.2},
+];
+
+function createOrganNote(freq,t,dur,vol) {
+  if(!audioCtx) return;
+  const g=audioCtx.createGain(); g.connect(reverbNode||masterGain);
+  [{m:1,a:1},{m:2,a:.55},{m:3,a:.28},{m:4,a:.18},{m:6,a:.10},{m:8,a:.06}].forEach(h=>{
+    const o=audioCtx.createOscillator(), hg=audioCtx.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(freq*h.m,t);
+    hg.gain.setValueAtTime(vol*h.a*.22,t);
+    hg.gain.setValueAtTime(vol*h.a*.22,t+dur-.12);
+    hg.gain.linearRampToValueAtTime(0,t+dur);
+    o.connect(hg); hg.connect(g);
+    o.start(t); o.stop(t+dur+.05);
+  });
+}
+
+function createReverb() {
+  const cv=audioCtx.createConvolver();
+  const sr=audioCtx.sampleRate, len=sr*3.5;
+  const buf=audioCtx.createBuffer(2,len,sr);
+  for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.2);}
+  cv.buffer=buf; cv.connect(masterGain); return cv;
+}
+
+function schedNotes() {
+  if(!isPlaying||!audioCtx) return;
+  while(nextNote < audioCtx.currentTime+.5) {
+    const s=SEQ[noteIdx%SEQ.length], dur=s.dur*1.05, t=nextNote;
+    createOrganNote(s.bass,t,dur,.75);
+    s.notes.forEach((f,i)=>createOrganNote(f,t+i*.045,dur-i*.04,.55-i*.08));
+    nextNote+=dur; noteIdx++;
+  }
+  schedTimer=setTimeout(schedNotes,200);
 }
 
 function initAudio() {
-  if (audioCtx) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  masterGain = audioCtx.createGain();
-  masterGain.gain.setValueAtTime(currentVolume, audioCtx.currentTime);
+  if(audioCtx) return;
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  masterGain=audioCtx.createGain();
+  masterGain.gain.setValueAtTime(curVol,audioCtx.currentTime);
   masterGain.connect(audioCtx.destination);
-  reverbNode = createReverb(audioCtx);
+  reverbNode=createReverb();
 }
 
-function startMusic() {
-  initAudio();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  isPlaying = true;
-  nextNoteTime = audioCtx.currentTime + 0.1;
-  scheduleNotes();
-  updateMusicUI();
+function startMusic(){initAudio();if(audioCtx.state==='suspended')audioCtx.resume();isPlaying=true;nextNote=audioCtx.currentTime+.1;schedNotes();updateMusicUI();}
+function stopMusic(){isPlaying=false;clearTimeout(schedTimer);updateMusicUI();}
+function toggleMusic(){isPlaying?stopMusic():startMusic();}
+function setVol(v){curVol=parseFloat(v);if(masterGain)masterGain.gain.setValueAtTime(curVol,audioCtx.currentTime);}
+function updateMusicUI(){
+  const btn=document.getElementById('m-toggle');
+  document.getElementById('m-icon').textContent=isPlaying?'⏸':'▶';
+  document.getElementById('m-wave').classList.toggle('playing',isPlaying);
+  btn.classList.toggle('playing',isPlaying);
 }
 
-function stopMusic() {
-  isPlaying = false;
-  clearTimeout(scheduleTimer);
-  updateMusicUI();
-}
-
-function toggleMusic() {
-  if (isPlaying) stopMusic(); else startMusic();
-}
-
-function setVolume(val) {
-  currentVolume = parseFloat(val);
-  if (masterGain) masterGain.gain.setValueAtTime(currentVolume, audioCtx.currentTime);
-}
-
-function updateMusicUI() {
-  const btn   = document.getElementById('music-toggle');
-  const icon  = document.getElementById('music-btn-icon');
-  const wave  = document.getElementById('music-wave');
-  if (isPlaying) {
-    btn.classList.add('playing');
-    icon.textContent = '⏸';
-    wave.classList.add('playing');
-  } else {
-    btn.classList.remove('playing');
-    icon.textContent = '▶';
-    wave.classList.remove('playing');
-  }
-}
-
-/* ════════════════════════════════════════════════
-   첫 접속 오버레이
-════════════════════════════════════════════════ */
-function enterSite() {
-  const overlay = document.getElementById('intro-overlay');
-  overlay.classList.add('hidden');
-  setTimeout(() => overlay.remove(), 750);
+/* ════════════════════════════════════
+   인트로
+════════════════════════════════════ */
+function enterSite(){
+  document.getElementById('intro').classList.add('hidden');
+  setTimeout(()=>document.getElementById('intro').remove(),800);
   startMusic();
 }
 
-/* ════════════════════════════════════════════════
-   상태 & 유틸리티
-════════════════════════════════════════════════ */
-const CATEGORIES = ['wealth', 'family', 'health', 'wish'];
-
-const BLESSINGS = [
+/* ════════════════════════════════════
+   상태 관리
+════════════════════════════════════ */
+const CATS=['wealth','family','health','wish'];
+const BLESSINGS=[
   "주님께서 오늘도 당신과 함께하십니다. 이미 이루어졌습니다.",
   "감사하는 마음이 기적을 불러옵니다. 오늘도 풍요로운 하루가 됩니다.",
   "당신의 기도는 이미 하늘에 닿아 있습니다. 믿음이 현실을 만듭니다.",
@@ -857,182 +933,323 @@ const BLESSINGS = [
   "믿음과 감사로 드리는 기도는 반드시 이루어집니다.",
 ];
 
-function getTodayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-function loadState() {
-  const raw = localStorage.getItem('prayer_' + getTodayKey());
-  return raw ? JSON.parse(raw) : { cards:{}, allDone:false };
-}
-function saveState(st) {
-  localStorage.setItem('prayer_' + getTodayKey(), JSON.stringify(st));
+function todayKey(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function loadSt(){const r=localStorage.getItem('prayer_'+todayKey());return r?JSON.parse(r):{cards:{},allDone:false};}
+function saveSt(s){localStorage.setItem('prayer_'+todayKey(),JSON.stringify(s));}
+
+function renderDate(){
+  const n=new Date();
+  const w=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'][n.getDay()];
+  document.getElementById('today-date').textContent=`${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일 ${w} — 주님 안에서 감사드립니다`;
+  document.getElementById('daily-blessing').textContent=BLESSINGS[n.getDate()%BLESSINGS.length];
 }
 
-/* ── 날짜 렌더 ── */
-function renderDate() {
-  const now = new Date();
-  const w = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'][now.getDay()];
-  document.getElementById('today-date').textContent =
-    `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${w} — 주님 안에서 감사드립니다`;
-  document.getElementById('daily-blessing').textContent =
-    BLESSINGS[now.getDate() % BLESSINGS.length];
-}
-
-/* ── UI 동기화 ── */
-function syncUI(state) {
-  CATEGORIES.forEach(cat => {
-    const card = document.getElementById('card-' + cat);
-    const txt  = document.getElementById('check-' + cat + '-text');
-    if (state.cards[cat]) {
-      card.classList.add('checked');
-      txt.textContent = '기도 완료 ✓';
-    } else {
-      card.classList.remove('checked');
-      txt.textContent = '탭하여 기도 완료 표시';
-    }
+function syncUI(st){
+  CATS.forEach(c=>{
+    const card=document.getElementById('card-'+c);
+    const txt=document.getElementById('ckt-'+c);
+    card.classList.toggle('checked',!!st.cards[c]);
+    txt.textContent=st.cards[c]?'기도 완료 ✓':'탭하여 기도 완료 표시';
   });
+  const wish=localStorage.getItem('wish_'+todayKey())||'';
+  document.getElementById('wish-text').value=wish;
+  updateWishAffirm(wish);
+  syncLaunch(st);
+}
 
-  const wish = localStorage.getItem('wish_' + getTodayKey()) || '';
-  document.getElementById('wish-text').value = wish;
-  updateWishAffirmation(wish);
+function syncLaunch(st){
+  const badge=document.getElementById('badge');
+  const shareRow=document.getElementById('share-row');
+  const btn=document.getElementById('launch-btn');
+  const icon=document.getElementById('launch-icon');
+  const main=document.getElementById('launch-main');
+  const sub=document.getElementById('launch-sub');
+  const done=document.getElementById('launch-done');
 
-  const badge    = document.getElementById('completion-badge');
-  const btn      = document.getElementById('complete-btn');
-  const doneMsg  = document.getElementById('complete-done-msg');
-
-  if (state.allDone) {
+  if(st.allDone){
     badge.classList.add('done');
-    badge.querySelector('.stamp').textContent = '✦';
-    document.getElementById('badge-text').textContent = '오늘의 기도를 완료했습니다';
-    btn.disabled = true;
-    document.getElementById('btn-label').textContent = '오늘의 기도 완료 ✓';
-    doneMsg.textContent = '주님, 저희 기도를 들어주심에 감사드립니다. 아멘.';
+    document.getElementById('badge-stamp').textContent='✦';
+    document.getElementById('badge-txt').textContent='오늘의 기도를 완료했습니다';
+    btn.disabled=true;
+    icon.textContent='🌟';
+    icon.style.animation='none';
+    main.textContent='소원이 우주로 발사되었습니다 ✓';
+    sub.textContent='주님의 응답을 믿으며 감사히 기다립니다';
+    done.textContent='주님, 저희 기도를 들어주심에 감사드립니다. 아멘.';
+    shareRow.style.display='flex';
   } else {
     badge.classList.remove('done');
-    badge.querySelector('.stamp').textContent = '☆';
-    document.getElementById('badge-text').textContent = '아직 오늘의 기도를 완료하지 않았어요';
-    btn.disabled = false;
-    document.getElementById('btn-label').textContent = '오늘의 기도 바치기';
-    doneMsg.textContent = '';
+    document.getElementById('badge-stamp').textContent='☆';
+    document.getElementById('badge-txt').textContent='아직 오늘의 기도를 완료하지 않았어요';
+    btn.disabled=false;
+    icon.textContent='🚀';
+    icon.style.animation='';
+    main.textContent='소원을 우주로 발사하기';
+    sub.textContent='기도가 완료되면 우주의 에너지가 응답합니다';
+    done.textContent='';
+    shareRow.style.display='none';
   }
 }
 
-/* ── 카드 토글 ── */
-function toggleCard(cat) {
-  const state = loadState();
-  state.cards[cat] = !state.cards[cat];
-  saveState(state);
-  const card = document.getElementById('card-' + cat);
-  const txt  = document.getElementById('check-' + cat + '-text');
-  if (state.cards[cat]) {
-    card.classList.add('checked','halo-anim');
-    txt.textContent = '기도 완료 ✓';
-    setTimeout(() => card.classList.remove('halo-anim'), 2500);
-  } else {
-    card.classList.remove('checked');
-    txt.textContent = '탭하여 기도 완료 표시';
+/* ════════════════════════════════════
+   카드 토글
+════════════════════════════════════ */
+function toggleCard(cat){
+  const st=loadSt();
+  st.cards[cat]=!st.cards[cat];
+  st.allDone=CATS.every(c=>st.cards[c]);
+  saveSt(st);
+  const card=document.getElementById('card-'+cat);
+  const txt=document.getElementById('ckt-'+cat);
+  card.classList.toggle('checked',!!st.cards[cat]);
+  txt.textContent=st.cards[cat]?'기도 완료 ✓':'탭하여 기도 완료 표시';
+  if(st.cards[cat]){
+    card.style.animation='none'; void card.offsetWidth;
+    card.style.animation='';
   }
+  syncLaunch(st);
 }
 
-function handleWishCardClick(e) {
-  if (e.target.tagName === 'TEXTAREA') return;
-  toggleCard('wish');
+function handleWishClick(e){if(e.target.tagName==='TEXTAREA')return;toggleCard('wish');}
+
+function saveWish(){
+  const v=document.getElementById('wish-text').value;
+  localStorage.setItem('wish_'+todayKey(),v);
+  updateWishAffirm(v);
 }
 
-function saveWish() {
-  const val = document.getElementById('wish-text').value;
-  localStorage.setItem('wish_' + getTodayKey(), val);
-  updateWishAffirmation(val);
+function updateWishAffirm(t){
+  const el=document.getElementById('wish-affirm');
+  if(t&&t.trim().length>4){el.style.display='block';el.textContent=`"${t.trim()} — 이미 이루어졌습니다."`;}
+  else el.style.display='none';
 }
 
-function updateWishAffirmation(text) {
-  const el = document.getElementById('wish-affirmation');
-  if (text && text.trim().length > 4) {
-    el.style.display = 'block';
-    el.textContent = `"${text.trim()} — 이미 이루어졌습니다."`;
-  } else {
-    el.style.display = 'none';
+/* ════════════════════════════════════
+   🚀 우주 발사 의식 (핵심!)
+════════════════════════════════════ */
+const RITUAL_PHASES = [
+  { text:'🌌 우주의 에너지를 모읍니다…', affirm:'깊은 숨을 들이쉬고, 마음을 여세요.\n당신의 간절한 소망이 하늘에 닿습니다.', dur:2200 },
+  { text:'✝ 주님께 기도를 올립니다…',    affirm:'주님, 저희 가정의 기도를 들으소서.\n이미 응답하심에 감사드립니다.', dur:2400 },
+  { text:'💫 소원을 우주로 전송합니다…',  affirm:'"구하라, 그리하면 받을 것이요.\n찾으라, 그리하면 찾을 것이요."', dur:2200 },
+  { text:'✨ 이미 이루어졌습니다!',        affirm:'우주가 응답했습니다.\n감사합니다. 감사합니다. 감사합니다.', dur:2600 },
+];
+
+function launchPrayer(){
+  const st=loadSt();
+  CATS.forEach(c=>{st.cards[c]=true;});
+  st.allDone=true;
+  saveSt(st);
+  CATS.forEach(c=>{
+    document.getElementById('card-'+c).classList.add('checked');
+    document.getElementById('ckt-'+c).textContent='기도 완료 ✓';
+  });
+  runRitual();
+}
+
+function runRitual(){
+  const overlay=document.getElementById('ritual-overlay');
+  overlay.classList.add('active');
+  ritualRunning=true;
+  ritualParticles=[];
+  drawRitual();
+
+  let phase=0, elapsed=0;
+  const bar=document.getElementById('ritual-bar');
+  const totalDur=RITUAL_PHASES.reduce((a,p)=>a+p.dur,0);
+
+  function showPhase(i){
+    if(i>=RITUAL_PHASES.length){ finishRitual(); return; }
+    const p=RITUAL_PHASES[i];
+    document.getElementById('ritual-phase').textContent=p.text;
+    document.getElementById('ritual-affirm').textContent=p.affirm;
+    elapsed+=i>0?RITUAL_PHASES[i-1].dur:0;
+    // 진행바 애니메이션
+    const startPct=(elapsed/totalDur)*100;
+    const endPct=((elapsed+p.dur)/totalDur)*100;
+    bar.style.width=startPct+'%';
+    requestAnimationFrame(()=>{
+      bar.style.transition=`width ${p.dur}ms linear`;
+      bar.style.width=endPct+'%';
+    });
+    setTimeout(()=>showPhase(i+1), p.dur);
   }
+  showPhase(0);
 }
 
-/* ── 전체 기도 완료 ── */
-function completeAllPrayer() {
-  const state = loadState();
-  CATEGORIES.forEach(cat => { state.cards[cat] = true; });
-  state.allDone = true;
-  saveState(state);
-  syncUI(state);
-  const badge = document.getElementById('completion-badge');
+function finishRitual(){
+  const overlay=document.getElementById('ritual-overlay');
+  overlay.classList.remove('active');
+  ritualRunning=false;
+
+  // 화면 전체 파티클 폭발
+  spawnCompletionParticles();
+
+  const st=loadSt();
+  syncLaunch(st);
+
+  // 배지 팝
+  const badge=document.getElementById('badge');
   badge.classList.remove('badge-pop');
   void badge.offsetWidth;
-  badge.classList.add('badge-pop');
-  spawnParticles();
+  badge.style.animation='badge-pop .5s cubic-bezier(.34,1.56,.64,1) forwards';
+  setTimeout(()=>badge.style.animation='',600);
 }
 
-/* ── 파티클 ── */
-function spawnParticles() {
-  const syms = ['✦','✧','✝','☆','✨','🙏','💛','🌟'];
-  const btn  = document.getElementById('complete-btn');
-  const rect = btn.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top  + rect.height / 2;
-  for (let i = 0; i < 20; i++) {
-    setTimeout(() => {
-      const p = document.createElement('span');
-      p.className = 'particle';
-      p.textContent = syms[Math.floor(Math.random() * syms.length)];
-      const ang = Math.random() * Math.PI * 2;
-      const r   = 30 + Math.random() * 90;
-      p.style.left = (cx + Math.cos(ang)*r) + 'px';
-      p.style.top  = (cy + Math.sin(ang)*r) + 'px';
-      p.style.opacity = '0.9';
-      p.style.animationDuration = (1.2 + Math.random()*0.9) + 's';
+function spawnCompletionParticles(){
+  const syms=['✦','✧','✝','☆','✨','🙏','💛','🌟','🌸','💜','⭐'];
+  const cx=window.innerWidth/2, cy=window.innerHeight/2;
+  for(let i=0;i<30;i++){
+    setTimeout(()=>{
+      const p=document.createElement('span');
+      p.className='particle';
+      p.textContent=syms[Math.floor(Math.random()*syms.length)];
+      const ang=Math.random()*Math.PI*2, r=40+Math.random()*160;
+      p.style.left=(cx+Math.cos(ang)*r)+'px';
+      p.style.top=(cy+Math.sin(ang)*r)+'px';
+      p.style.animationDuration=(1.2+Math.random()*.9)+'s';
+      p.style.fontSize=(0.8+Math.random()*1.2)+'rem';
       document.body.appendChild(p);
-      setTimeout(() => p.remove(), 2300);
-    }, i * 52);
+      setTimeout(()=>p.remove(),2300);
+    }, i*60);
   }
 }
 
-/* ── 별빛 캔버스 ── */
-function initStars() {
-  const canvas = document.getElementById('stars-canvas');
-  const ctx = canvas.getContext('2d');
-  let stars = [], W, H;
-  function resize() {
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    stars = [];
-    for (let i = 0; i < 160; i++) {
-      stars.push({
-        x: Math.random()*W, y: Math.random()*H,
-        r: Math.random()*1.15+0.2,
-        speed: 0.003+Math.random()*0.006,
-        phase: Math.random()*Math.PI*2,
-      });
-    }
-  }
-  function draw(t) {
-    ctx.clearRect(0,0,W,H);
-    stars.forEach(s => {
-      const a = 0.22 + 0.52 * Math.abs(Math.sin(t*s.speed+s.phase));
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(232,201,106,${a})`;
-      ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  window.addEventListener('resize', resize);
-  resize();
-  requestAnimationFrame(draw);
+/* ════════════════════════════════════
+   공유 시스템 (iOS 완전 호환)
+════════════════════════════════════ */
+function buildText(){
+  const n=new Date();
+  const w=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'][n.getDay()];
+  const ds=`${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일 ${w}`;
+  const wish=localStorage.getItem('wish_'+todayKey())||'';
+  const st=loadSt();
+  const lb={wealth:'💛 재물과 풍요',family:'🤍 가족 화목',health:'💚 건강과 치유',wish:'🌸 특별 소망'};
+  const checks=CATS.map(c=>`${st.cards[c]?'✅':'⬜'} ${lb[c]}`).join('\n');
+  return `✝ 우리 가족의 기도 ✝\n${ds}\n\n${checks}${wish?'\n\n📝 오늘의 소망:\n'+wish:''}\n\n이미 이루어졌습니다. 아멘. 🙏\n감사합니다. 감사합니다. 감사합니다.\n\n${window.location.href}`;
 }
 
-/* ── 초기화 ── */
-document.addEventListener('DOMContentLoaded', () => {
+// iOS: onclick에서 동기 호출이어야 함
+function shareKakao(btn){
+  const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(isIOS && navigator.share){
+    navigator.share({title:'✝ 우리 가족의 기도',text:buildText(),url:window.location.href})
+      .catch(e=>{ if(e.name==='AbortError')return; openSheet(); });
+    return;
+  }
+  openSheet();
+}
+
+function copyLink(btn){
+  iosCopy(window.location.href,'🔗 링크가 복사됐어요! 카카오톡에 붙여넣기 하세요');
+}
+
+function openSheet(){
+  const n=new Date();
+  const w=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'][n.getDay()];
+  const st=loadSt();
+  const done=CATS.filter(c=>st.cards[c]).length;
+  document.getElementById('sheet-desc').textContent=
+    `${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일 ${w}\n기도 완료 ${done}/4 ✅`;
+  document.getElementById('sheet').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeSheet(){document.getElementById('sheet').style.display='none';document.body.style.overflow='';}
+
+function doShareKakao(){
+  closeSheet();
+  if(navigator.share){
+    navigator.share({title:'✝ 우리 가족의 기도',text:buildText(),url:window.location.href})
+      .catch(e=>{ if(e.name!=='AbortError') iosCopy(buildText(),'📋 복사됐어요! 카카오톡에 붙여넣기 하세요'); });
+    return;
+  }
+  iosCopy(buildText(),'📋 복사됐어요! 카카오톡에 붙여넣기 하세요');
+}
+
+function doShareCopy(type){
+  closeSheet();
+  const content=type==='link'?window.location.href:buildText();
+  const msg=type==='link'?'🔗 링크가 복사됐어요!':'📋 기도 내용이 복사됐어요!';
+  iosCopy(content,msg);
+}
+
+function iosCopy(text,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>showToast(msg)).catch(()=>execCopy(text,msg));
+    return;
+  }
+  execCopy(text,msg);
+}
+
+function execCopy(text,msg){
+  const el=document.createElement('textarea');
+  el.value=text; el.setAttribute('readonly','');
+  el.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px';
+  document.body.appendChild(el);
+  if(/ipad|iphone/i.test(navigator.userAgent)){
+    const r=document.createRange(); r.selectNodeContents(el);
+    const s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    el.setSelectionRange(0,999999);
+  } else { el.select(); }
+  try{ document.execCommand('copy'); showToast(msg); }
+  catch(e){ showToast('⚠️ 직접 복사하세요: '+window.location.href); }
+  document.body.removeChild(el);
+}
+
+function showToast(msg){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2600);
+}
+
+/* ════════════════════════════════════
+   기도 기록
+════════════════════════════════════ */
+function toggleHistory(){
+  const b=document.getElementById('h-body');
+  const open=b.style.display==='none';
+  b.style.display=open?'block':'none';
+  document.getElementById('h-icon').textContent=open?'▲':'▼';
+  if(open) renderHistory();
+}
+
+function renderHistory(){
+  const list=document.getElementById('history-list');
+  const entries=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!k.startsWith('prayer_')) continue;
+    const dk=k.replace('prayer_','');
+    const st=JSON.parse(localStorage.getItem(k));
+    entries.push({dk,st,wish:localStorage.getItem('wish_'+dk)||''});
+  }
+  entries.sort((a,b)=>b.dk.localeCompare(a.dk));
+  if(!entries.length){list.innerHTML='<div class="h-empty">아직 기도 기록이 없습니다</div>';return;}
+  const lb={wealth:'💛 재물',family:'🤍 가족',health:'💚 건강',wish:'🌸 소망'};
+  list.innerHTML=entries.map(({dk,st,wish})=>{
+    const [y,m,d]=dk.split('-');
+    const tags=CATS.map(c=>`<span class="h-tag ${st.cards[c]?'done':''}">${lb[c]} ${st.cards[c]?'✓':''}</span>`).join('');
+    return`<div class="h-item">
+      <div class="h-date">${y}년 ${parseInt(m)}월 ${parseInt(d)}일 &nbsp;·&nbsp; ${st.allDone?'🚀 발사 완료':'미완료'}</div>
+      <div class="h-tags">${tags}</div>
+      ${wish?`<div class="h-wish">${wish}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════
+   초기화
+════════════════════════════════════ */
+const KAKAO_APP_KEY='사용자앱키입력';
+function initKakao(){if(typeof Kakao==='undefined')return;if(KAKAO_APP_KEY!=='사용자앱키입력'&&!Kakao.isInitialized())Kakao.init(KAKAO_APP_KEY);}
+
+document.addEventListener('DOMContentLoaded',()=>{
   renderDate();
-  syncUI(loadState());
-  initStars();
+  syncUI(loadSt());
+  initBgCanvas();
+  initRitualCanvas();
+  initKakao();
 });
 </script>
 </body>
